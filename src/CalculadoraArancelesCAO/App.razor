@@ -1,0 +1,36 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using CalculadoraArancelesCAO.UI.Components
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <RedirigirA Destino="/login" />
+                    }
+                    else
+                    {
+                        <div class="container py-4">
+                            <p>No tiene permiso para acceder a esta pagina.</p>
+                        </div>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Pagina no encontrada | CAO</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="container py-4">
+                    <div class="alert alert-warning">
+                        <strong>La pagina solicitada no existe.</strong>
+                    </div>
+                    <a class="btn btn-sm btn-primary" href="">Volver al inicio</a>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

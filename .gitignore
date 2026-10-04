@@ -1,0 +1,28 @@
+# Dependencies
+bin/
+obj/
+packages/
+
+# Build outputs
+artifacts/
+publish/
+
+# IDE
+.vs/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Test results
+TestResults/
+
+# Vercel
+.vercel

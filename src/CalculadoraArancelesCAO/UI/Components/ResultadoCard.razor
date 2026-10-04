@@ -1,0 +1,149 @@
+@if (Resultado is not null)
+{
+    <div class="card shadow-sm border-0 resultado-card mt-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+                <div>
+                    <div class="text-uppercase small text-secondary fw-semibold">
+                        Área @AreaArancelCatalogo.Obtener(Resultado.Area).Codigo &middot; @Resultado.Concepto
+                    </div>
+                    <h2 class="h4 mb-0 mt-1">Resultado del cálculo</h2>
+                </div>
+                @if (Resultado.LimiteMinimoAplicado)
+                {
+                    <span class="badge text-bg-warning">Protegido por límite mínimo</span>
+                }
+            </div>
+
+            @if (Resultado.LimiteMinimoAplicado)
+            {
+                <div class="alert alert-warning py-2 px-3 small">
+                    <strong>Atención:</strong> el honorario calculado
+                    (@FormatoBoliviano.Moneda(Resultado.HonorarioCalculado ?? 0)) fue inferior al mínimo
+                    reglamentario de <strong>@FormatoBoliviano.Moneda(Resultado.LimiteMinimo ?? 0)</strong>
+                    (Hbase &times; Fa). Se aplicó el límite mínimo establecido en el reglamento.
+                </div>
+            }
+
+            <div class="total-panel">
+                <span class="total-label">Honorario total</span>
+                <span class="total-valor">@FormatoBoliviano.Moneda(Resultado.Total)</span>
+                <span class="total-letra">Son @Resultado.TotalEnLetras.-</span>
+            </div>
+
+            @if (Resultado.AportePatrimonioInmobiliario is not null)
+            {
+                <div class="alert alert-info py-2 px-3 small mt-3 mb-0">
+                    Aporte al Patrimonio Inmobiliario (5,5 %):
+                    <strong>@FormatoBoliviano.Moneda(Resultado.AportePatrimonioInmobiliario.Value)</strong>
+                    &middot; <strong>Total a cobrar: @FormatoBoliviano.Moneda(Resultado.Total)</strong>
+                </div>
+            }
+
+            <dl class="row factors mt-3 mb-0 small">
+                @if (Resultado.CostoHora is not null)
+                {
+                    <div class="col-6 col-md-3">
+                        <dt>Costo hora (CH)</dt>
+                        <dd>@FormatoBoliviano.Moneda(Resultado.CostoHora.Value)</dd>
+                    </div>
+                }
+                @if (Resultado.HonorarioBaseSemanal is not null)
+                {
+                    <div class="col-6 col-md-3">
+                        <dt>Honorario base (Hbase)</dt>
+                        <dd>@FormatoBoliviano.Moneda(Resultado.HonorarioBaseSemanal.Value)</dd>
+                    </div>
+                }
+                @if (Resultado.FactorH is not null)
+                {
+                    <div class="col-6 col-md-3">
+                        <dt>Factor h<sub>(k,r)</sub></dt>
+                        <dd>@FormatoBoliviano.Decimal(Resultado.FactorH.Value, 2)</dd>
+                    </div>
+                }
+                @if (Resultado.FactorAlcance is not null)
+                {
+                    <div class="col-6 col-md-3">
+                        <dt>Factor de alcance (Fa)</dt>
+                        <dd>@FormatoBoliviano.Decimal(Resultado.FactorAlcance.Value, 2)</dd>
+                    </div>
+                }
+                @if (Resultado.FactorComplejidad is not null)
+                {
+                    <div class="col-6 col-md-3">
+                        <dt>Factor complejidad (Fj)</dt>
+                        <dd>@FormatoBoliviano.Decimal(Resultado.FactorComplejidad.Value, 2)</dd>
+                    </div>
+                }
+                @if (Resultado.SuperficieM2 is not null)
+                {
+                    <div class="col-6 col-md-3">
+                        <dt>Superficie</dt>
+                        <dd>@FormatoBoliviano.Decimal(Resultado.SuperficieM2.Value, 2) m²</dd>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Resultado.RangoDescripcion))
+                {
+                    <div class="col-6 col-md-3">
+                        <dt>Rango de superficie</dt>
+                        <dd>@Resultado.RangoDescripcion</dd>
+                    </div>
+                }
+            </dl>
+        </div>
+
+        <div class="card-footer bg-white">
+            <details>
+                <summary class="small fw-semibold">Ver desglose del cálculo</summary>
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm small align-middle mb-2">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Concepto</th>
+                                <th>Detalle</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-center">Unidad</th>
+                                <th class="text-end">Factor</th>
+                                <th class="text-end">Subtotal (Bs)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var linea in Resultado.Desglose)
+                            {
+                                <tr>
+                                    <td>@linea.Concepto</td>
+                                    <td class="text-secondary">@linea.Detalle</td>
+                                    <td class="text-end">@FormatoBoliviano.Decimal(linea.Cantidad, 2)</td>
+                                    <td class="text-center">@linea.Unidad</td>
+                                    <td class="text-end">
+                                        @(linea.Factor is null ? "-" : FormatoBoliviano.Decimal(linea.Factor.Value, 2))
+                                    </td>
+                                    <td class="text-end fw-semibold">@FormatoBoliviano.Moneda(linea.Subtotal)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small text-secondary mb-0"><strong>Fórmula:</strong> @Resultado.FormulaResumen</p>
+            </details>
+
+            @if (Resultado.Advertencias.Count > 0)
+            {
+                <div class="alert alert-secondary py-2 px-3 small mt-3 mb-0">
+                    <strong>Advertencias:</strong>
+                    <ul class="mb-0 mt-1">
+                        @foreach (var advertencia in Resultado.Advertencias)
+                        {
+                            <li>@advertencia</li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public ResultadoArancel? Resultado { get; set; }
+}

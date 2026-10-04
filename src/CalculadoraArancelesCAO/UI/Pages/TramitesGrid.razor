@@ -1,0 +1,99 @@
+﻿@page "/tramites"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject TramiteRepository Tramites
+@inject ParametrosService Parametros
+
+<PageTitle>TrÃ¡mites y tarifas | CAO</PageTitle>
+
+<h1 class="h4 mb-1">TrÃ¡mites, planos demostrativos y declaraciones juradas</h1>
+<p class="text-secondary small mb-3">Buscador rÃ¡pido de tarifas vigentes.</p>
+
+@if (!Tramites.TodosConfirmados)
+{
+    <div class="alert alert-warning py-2 px-3 small">
+        @TramiteRepository.AvisoVigencia
+    </div>
+}
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="row g-2 mb-3">
+            <div class="col-12 col-md-8">
+                <label class="visually-hidden" for="buscar">Buscar trÃ¡mite</label>
+                <input id="buscar" type="search" class="form-control" placeholder="Buscar por nombre o cÃ³digoâ€¦"
+                       value="@_texto" @oninput="e => { _texto = e.Value?.ToString() ?? string.Empty; Buscar(); }" />
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="visually-hidden" for="categoria">CategorÃ­a</label>
+                <select id="categoria" class="form-select" value="@_categoria"
+                        @onchange="CambiarCategoria">
+                    <option value="">Todas las categorÃ­as</option>
+                    @foreach (var categoria in CategoriaTramiteCatalogo.Todas)
+                    {
+                        <option value="@categoria.Id">@categoria.Nombre</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        @if (_resultados.Count == 0)
+        {
+            <p class="text-secondary small mb-0">No se encontraron trÃ¡mites con ese criterio.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5rem">CÃ³digo</th>
+                            <th>TrÃ¡mite</th>
+                            <th class="d-none d-md-table-cell">Base</th>
+                            <th class="text-end">Tarifa (Bs)</th>
+                            <th class="d-none d-lg-table-cell">Vigencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tramite in _resultados)
+                        {
+                            <tr>
+                                <td class="small text-secondary">@tramite.Codigo</td>
+                                <td>
+                                    <div>@tramite.Nombre</div>
+                                    <div class="small text-secondary">
+                                        @CategoriaTramiteCatalogo.Nombre(tramite.Categoria) &middot; @tramite.Unidad
+                                        @if (!tramite.ConfirmadoPorAsamblea)
+                                        {
+                                            <text>&nbsp;</text><span class="badge text-bg-light border ms-1">referencial</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="d-none d-md-table-cell small text-secondary">@tramite.BaseDescripcion</td>
+                                <td class="text-end fw-semibold">
+                                    @FormatoBoliviano.Moneda(tramite.Resolver(Parametros.Actual))
+                                </td>
+                                <td class="d-none d-lg-table-cell small text-secondary">@tramite.Vigencia</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string _texto = string.Empty;
+    private CategoriaTramite? _categoria;
+    private IReadOnlyList<Tramite> _resultados = [];
+
+    protected override void OnInitialized() => Buscar();
+
+    private void Buscar() => _resultados = Tramites.Buscar(_texto, _categoria).ToList();
+
+    private void CambiarCategoria(ChangeEventArgs e)
+    {
+        _categoria = int.TryParse(e.Value?.ToString(), out var valor) ? (CategoriaTramite)valor : null;
+        Buscar();
+    }
+}

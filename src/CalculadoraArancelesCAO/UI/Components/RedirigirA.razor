@@ -1,0 +1,28 @@
+@inject NavigationManager Navigation
+
+@code {
+    /// <summary>
+    /// Redirige una sola vez tras el primer renderizado, evitando ciclos si el
+    /// usuario ya se encuentra en la ruta destino.
+    /// </summary>
+    [Parameter] public string Destino { get; set; } = "/";
+
+    private bool _redirigido;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender || _redirigido)
+        {
+            return;
+        }
+
+        _redirigido = true;
+
+        var actual = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
+
+        if (!string.Equals(actual, Destino.Trim('/'), StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo(Destino, true);
+        }
+    }
+}

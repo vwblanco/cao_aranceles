@@ -1,0 +1,60 @@
+﻿@page "/area4a"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inherits CalculadoraArancelesCAO.UI.Components.CalculadoraBase
+
+<PageTitle>Ãrea 4A Â· AvalÃºos y peritajes | CAO</PageTitle>
+
+<h1 class="h4 mb-1">Ãrea 4A &middot; AvalÃºos, peritajes y dirimiciÃ³n</h1>
+<p class="text-secondary small mb-3">
+    AvalÃºo = Valor &times; 3/1000 &middot; Peritaje y dirimiciÃ³n = Valor &times; 6/1000
+</p>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="mb-3">
+            <span class="form-label small fw-semibold d-block mb-2">Tipo de servicio</span>
+            @foreach (var tipo in Matrices.TiposAvaluo)
+            {
+                <button type="button"
+                        class="btn btn-sm me-1 mb-1 @(_tipo == tipo.Id ? "btn-success" : "btn-outline-success")"
+                        @onclick="() => { _tipo = tipo.Id; Recalcular(); }">
+                    @tipo.Codigo &middot; @tipo.Nombre
+                    <span class="ms-1 opacity-75">@FormatoBoliviano.Decimal(tipo.TasaPorMil, 0) por mil</span>
+                </button>
+            }
+        </div>
+
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold" for="a4-valor">Valor comercial del inmueble &middot; Bs</label>
+                <input id="a4-valor" type="text" inputmode="decimal" class="form-control"
+                       value="@_valor" @oninput="e => { _valor = e.Value?.ToString() ?? string.Empty; Recalcular(); }" />
+            </div>
+            <div class="col-12 col-md-6">
+                <button type="button" class="btn btn-success w-100" @onclick="Calcular">
+                    Calcular honorario @Matrices.ObtenerTipoAvaluo(_tipo).Nombre.ToLowerInvariant()
+                </button>
+            </div>
+        </div>
+
+        @if (Error is not null)
+        {
+            <div class="alert alert-danger py-2 px-3 small mt-3 mb-0">@Error</div>
+        }
+    </div>
+</div>
+
+<ResultadoCard Resultado="Resultado" />
+<CotizacionExport Resultado="Resultado" />
+
+@code {
+    private TipoAvaluo _tipo = TipoAvaluo.Avaluo;
+    private string _valor = "250000";
+
+    protected override void OnInitialized() => Recalcular();
+
+    protected override void Calcular()
+    {
+        Resultado = Motor.CalcularAvaluo(P, _tipo, FormatoBoliviano.NumeroParseado(_valor));
+    }
+}

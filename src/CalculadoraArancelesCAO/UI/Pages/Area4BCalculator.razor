@@ -1,0 +1,58 @@
+﻿@page "/area4b"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inherits CalculadoraArancelesCAO.UI.Components.CalculadoraBase
+
+<PageTitle>Ãrea 4B Â· Inspecciones y auditorÃ­as | CAO</PageTitle>
+
+<h1 class="h4 mb-1">Ãrea 4B &middot; Inspecciones y auditorÃ­as</h1>
+<p class="text-secondary small mb-3">Honorario = Hbase &times; multiplicador (0,50 &middot; 0,75 &middot; 1,50)</p>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="mb-3">
+            <span class="form-label small fw-semibold d-block mb-2">Tipo de inspecciÃ³n</span>
+            @foreach (var tipo in Matrices.TiposInspeccion)
+            {
+                <button type="button"
+                        class="btn btn-sm me-1 mb-1 text-start @(_tipo == tipo.Id ? "btn-success" : "btn-outline-success")"
+                        @onclick="() => { _tipo = tipo.Id; Recalcular(); }">
+                    @tipo.Codigo &middot; @tipo.Nombre
+                    <span class="ms-1 opacity-75">&times; @FormatoBoliviano.Decimal(tipo.Multiplicador, 2)</span>
+                </button>
+            }
+            <div class="form-text">@Matrices.ObtenerTipoInspeccion(_tipo).Descripcion</div>
+        </div>
+
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold" for="a4b-cantidad">Cantidad de inspecciones</label>
+                <input id="a4b-cantidad" type="text" inputmode="numeric" class="form-control"
+                       value="@_cantidad" @oninput="e => { _cantidad = e.Value?.ToString() ?? string.Empty; Recalcular(); }" />
+            </div>
+            <div class="col-12 col-md-8">
+                <button type="button" class="btn btn-success w-100" @onclick="Calcular">Calcular honorario</button>
+            </div>
+        </div>
+
+        @if (Error is not null)
+        {
+            <div class="alert alert-danger py-2 px-3 small mt-3 mb-0">@Error</div>
+        }
+    </div>
+</div>
+
+<ResultadoCard Resultado="Resultado" />
+<CotizacionExport Resultado="Resultado" />
+
+@code {
+    private TipoInspeccion _tipo = TipoInspeccion.Simple;
+    private string _cantidad = "1";
+
+    protected override void OnInitialized() => Recalcular();
+
+    protected override void Calcular()
+    {
+        Resultado = Motor.CalcularInspeccion(
+            P, _tipo, (int)FormatoBoliviano.NumeroParseado(_cantidad));
+    }
+}

@@ -1,0 +1,109 @@
+﻿@page "/area6"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inherits CalculadoraArancelesCAO.UI.Components.CalculadoraBase
+
+<PageTitle>Ãrea 6 Â· Plantas tipo y proyectos repetidos | CAO</PageTitle>
+
+<h1 class="h4 mb-1">Ãrea 6 &middot; Plantas tipo y proyectos repetidos</h1>
+<p class="text-secondary small mb-3">
+    Escala decreciente: 1Âª 100 % &middot; 2Âª 50 % &middot; 3Âª 40 % &middot; 4Âª 30 % &middot; 5Âª 20 % &middot;
+    6Âª&ndash;10Âª 10 % &middot; 11Âª&ndash;50Âª 5 % &middot; mÃ¡s de 50Âª 2 %
+</p>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold" for="a6-valor">Valor de la unidad base &middot; Bs</label>
+                <input id="a6-valor" type="text" inputmode="decimal" class="form-control"
+                       value="@_valorBase" @oninput="e => { _valorBase = e.Value?.ToString() ?? string.Empty; Recalcular(); }" />
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold" for="a6-cantidad">Cantidad de unidades</label>
+                <input id="a6-cantidad" type="text" inputmode="numeric" class="form-control"
+                       value="@_cantidad" @oninput="e => { _cantidad = e.Value?.ToString() ?? string.Empty; Recalcular(); }" />
+            </div>
+            <div class="col-12 col-md-4">
+                <button type="button" class="btn btn-success w-100" @onclick="Calcular">Calcular honorario</button>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="button" class="btn btn-sm btn-outline-success" @onclick="UsarEjemploArea1">
+                Calcular la unidad base con el Ãrea 1 (180 mÂ², vivienda unifamiliar)
+            </button>
+        </div>
+
+        @if (Error is not null)
+        {
+            <div class="alert alert-danger py-2 px-3 small mt-3 mb-0">@Error</div>
+        }
+
+        @if (_escala is not null)
+        {
+            <div class="table-responsive mt-3">
+                <table class="table table-sm small align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tramo</th>
+                            <th class="text-end">Unidades</th>
+                            <th class="text-end">Porcentaje</th>
+                            <th class="text-end">Subtotal (Bs)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tramo in _escala.Tramos)
+                        {
+                            <tr>
+                                <td>@TramoDescripcion(tramo.Tramo)</td>
+                                <td class="text-end">@tramo.Cantidad</td>
+                                <td class="text-end">@FormatoBoliviano.Porcentaje(tramo.Porcentaje)</td>
+                                <td class="text-end">@FormatoBoliviano.Moneda(tramo.Subtotal)</td>
+                            </tr>
+                        }
+                        <tr class="table-light fw-semibold">
+                            <td colspan="3">Factor acumulado &times; @FormatoBoliviano.Decimal(_escala.FactorAcumulado, 2)</td>
+                            <td class="text-end">@FormatoBoliviano.Moneda(_escala.Total)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<ResultadoCard Resultado="Resultado" />
+<CotizacionExport Resultado="Resultado" />
+
+@code {
+    private string _valorBase = "12967.15";
+    private string _cantidad = "10";
+    private ResultadoEscala? _escala;
+
+    private static string TramoDescripcion(string tramo) =>
+        EscalaArea6Catalogo.Tramos.FirstOrDefault(t => t.Tramo == tramo)?.RangoMostrado ?? tramo;
+
+    protected override void OnInitialized() => Recalcular();
+
+    protected override void Calcular()
+    {
+        _escala = Motor.CalcularArea6(
+            FormatoBoliviano.NumeroParseado(_valorBase),
+            (int)FormatoBoliviano.NumeroParseado(_cantidad));
+
+        Resultado = _escala.ToResultadoArancel();
+    }
+
+    private void UsarEjemploArea1()
+    {
+        var unidad = Motor.CalcularArea1(
+            P,
+            TipologiaEdificio.ViviendaUnifamiliar,
+            180,
+            PerfilAlcance.Habitual,
+            Matrices.Etapas.Select(e => e.Id));
+
+        _valorBase = FormatoBoliviano.Numero(unidad.Total);
+        Recalcular();
+    }
+}

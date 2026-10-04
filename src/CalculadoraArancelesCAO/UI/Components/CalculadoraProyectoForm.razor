@@ -1,0 +1,128 @@
+@inherits CalculadoraArancelesCAO.UI.Components.CalculadoraBase
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold" for="f-tipologia">Tipología de la obra</label>
+                <select id="f-tipologia" class="form-select" value="@_tipologia"
+                        @onchange="e => { _tipologia = Enum.Parse<TipologiaEdificio>(e.Value?.ToString() ?? nameof(TipologiaEdificio.ViviendaUnifamiliar)); Recalcular(); }">
+                    @foreach (var tipologia in Matrices.Tipologias)
+                    {
+                        <option value="@tipologia.Id">@tipologia.Nombre</option>
+                    }
+                </select>
+                <div class="form-text">@Matrices.ObtenerTipologia(_tipologia).Descripcion</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold" for="f-m2">Superficie total &middot; m²</label>
+                <input id="f-m2" type="text" inputmode="decimal" class="form-control"
+                       value="@_superficie" @oninput="e => { _superficie = e.Value?.ToString() ?? string.Empty; Recalcular(); }" />
+                <div class="form-text">
+                    Rango aplicable: <strong>@_rangoDescripcion</strong>
+                    &middot; h<sub>(k,r)</sub> = <strong>@_factorH</strong>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-3" />
+
+        @if (MostrarSubArea3)
+        {
+            <div class="mb-3">
+                <span class="form-label small fw-semibold d-block mb-2">Tipo de intervención</span>
+                @foreach (var sub in Matrices.SubAreasArea3)
+                {
+                    <button type="button"
+                            class="btn btn-sm me-1 mb-1 @(_subArea == sub.Id ? "btn-success" : "btn-outline-success")"
+                            title="@sub.Descripcion"
+                            @onclick="() => { _subArea = sub.Id; Recalcular(); }">
+                        @sub.Codigo &middot; @sub.Nombre
+                        <span class="ms-1 opacity-75">Fj @FormatoBoliviano.Decimal(sub.Fj, 2)</span>
+                    </button>
+                }
+            </div>
+        }
+
+        <SelectorEtapas Perfil="_perfil" PerfilChanged="p => { _perfil = p; Recalcular(); }"
+                       Contratadas="_etapas" ContratadasChanged="e => { _etapas = e; Recalcular(); }"
+                       Parametros="P" />
+
+        <div class="row g-3 align-items-end mt-1">
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold" for="f-fa">Fa manual (opcional)</label>
+                <input id="f-fa" type="text" inputmode="decimal" class="form-control"
+                       placeholder="@FormatoBoliviano.Decimal(FactorAlcanceEtapas, 2)"
+                       value="@_faManual" @oninput="e => { _faManual = e.Value?.ToString() ?? string.Empty; Recalcular(); }" />
+                <div class="form-text">Déjelo vacío para usar la suma de las etapas contratadas.</div>
+            </div>
+            <div class="col-12 col-md-8 d-flex gap-2">
+                <button type="button" class="btn btn-success flex-grow-1" @onclick="Calcular">
+                    Calcular honorario
+                </button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="Restablecer" title="Restablecer el formulario">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        @if (Error is not null)
+        {
+            <div class="alert alert-danger py-2 px-3 small mt-3 mb-0">@Error</div>
+        }
+    </div>
+</div>
+
+<ResultadoCard Resultado="Resultado" />
+<CotizacionExport Resultado="Resultado" />
+
+@code {
+    [Parameter] public bool MostrarSubArea3 { get; set; }
+
+    private TipologiaEdificio _tipologia = TipologiaEdificio.ViviendaUnifamiliar;
+    private PerfilAlcance _perfil = PerfilAlcance.Habitual;
+    private SubArea3 _subArea = SubArea3.Remodelacion;
+    private IReadOnlyCollection<EtapaProyecto> _etapas = [];
+    private string _superficie = "180";
+    private string _faManual = string.Empty;
+
+    private double SuperficieNumerica => FormatoBoliviano.NumeroParseado(_superficie);
+
+    private double? _faNumerica => string.IsNullOrWhiteSpace(_faManual)
+        ? null
+        : FormatoBoliviano.NumeroParseado(_faManual);
+
+    private double FactorAlcanceEtapas => Matrices.CalcularFactorAlcance(_perfil, _etapas);
+
+    private string _rangoDescripcion => SuperficieNumerica > 0
+        ? Matrices.ObtenerRango(SuperficieNumerica).Etiqueta
+        : "indefinida";
+
+    private string _factorH => SuperficieNumerica > 0
+        ? FormatoBoliviano.Decimal(Matrices.ObtenerFactorH(_tipologia, SuperficieNumerica).Factor, 2)
+        : "-";
+
+    protected override void OnInitialized()
+    {
+        _etapas = Matrices.Etapas.Select(e => e.Id).ToList();
+        Recalcular();
+    }
+
+    protected override void Calcular()
+    {
+        Resultado = MostrarSubArea3
+            ? Motor.CalcularArea3(P, _subArea, _tipologia, SuperficieNumerica, _perfil, _etapas, _faNumerica)
+            : Motor.CalcularArea1(P, _tipologia, SuperficieNumerica, _perfil, _etapas, _faNumerica);
+    }
+
+    private void Restablecer()
+    {
+        _tipologia = TipologiaEdificio.ViviendaUnifamiliar;
+        _perfil = PerfilAlcance.Habitual;
+        _superficie = "180";
+        _faManual = string.Empty;
+        _etapas = Matrices.Etapas.Select(e => e.Id).ToList();
+        Recalcular();
+    }
+}

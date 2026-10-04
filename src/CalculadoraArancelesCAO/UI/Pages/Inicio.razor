@@ -1,0 +1,81 @@
+﻿@page "/"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject ArancelEngine Motor
+@inject MatrixRepository Matrices
+@inject ParametrosService Parametros
+
+<PageTitle>Calculadora de Aranceles CAO</PageTitle>
+
+<h1 class="h4 mb-1">Calculadora de Aranceles del CAO</h1>
+<p class="text-secondary small">
+    Reglamento de Aranceles 2026 &middot; Variable Vida @FormatoBoliviano.Moneda(Parametros.Actual.VariableVida)
+    &middot; Costo hora @FormatoBoliviano.Moneda(Parametros.Actual.CostoHora)
+    &middot; Honorario base @FormatoBoliviano.Moneda(Parametros.Actual.HonorarioBaseSemanal)
+</p>
+
+<div class="row g-3">
+    @foreach (var area in Matrices.Areas)
+    {
+        <div class="col-12 col-md-6 col-xl-4">
+            <a class="area-card text-decoration-none" href="@area.Ruta">
+                <div class="d-flex align-items-start gap-3">
+                    <span class="area-card-codigo">@area.Codigo</span>
+                    <div>
+                        <div class="area-card-titulo">@area.Nombre</div>
+                        <div class="area-card-desc">@area.Descripcion</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+</div>
+
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-body">
+        <h2 class="h6">Ejemplo de verificaciÃ³n del algoritmo</h2>
+        <p class="small text-secondary mb-2">
+            Vivienda Unifamiliar de @FormatoBoliviano.Decimal(180, 0) mÂ² con proyecto completo (Fa = 1,00).
+        </p>
+        <div class="table-responsive">
+            <table class="table table-sm small mb-0 align-middle">
+                <tbody>
+                    <tr>
+                        <th style="width: 32%">Costo hora (CH)</th>
+                        <td>@FormatoBoliviano.Moneda(Parametros.Actual.VariableVida / 160) = Bs @FormatoBoliviano.Decimal(Parametros.Actual.CostoHora, 2)/h</td>
+                    </tr>
+                    <tr>
+                        <th>Factor h<sub>(k,r)</sub></th>
+                        <td>1,29 (rango 101 &ndash; 250 mÂ²)</td>
+                    </tr>
+                    <tr>
+                        <th>Honorario calculado (Hcalc)</th>
+                        <td>
+                            @FormatoBoliviano.Decimal(Parametros.Actual.CostoHora, 2) &times; 180 &times; 1,29 &times; 1,00 &times; 1,00
+                            = <strong>@FormatoBoliviano.Moneda(_ejemplo?.Total ?? 0)</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>LÃ­mite mÃ­nimo (Hmin)</th>
+                        <td>@FormatoBoliviano.Moneda(Parametros.Actual.HonorarioBaseSemanal) &times; 1,00</td>
+                    </tr>
+                    <tr class="table-light">
+                        <th>Honorario final aplicado</th>
+                        <td><strong>@FormatoBoliviano.Moneda(_ejemplo?.Total ?? 0)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ResultadoArancel? _ejemplo;
+
+    protected override void OnInitialized() =>
+        _ejemplo = Motor.CalcularArea1(
+            Parametros.Actual,
+            TipologiaEdificio.ViviendaUnifamiliar,
+            180,
+            PerfilAlcance.Habitual,
+            Matrices.Etapas.Select(e => e.Id));
+}

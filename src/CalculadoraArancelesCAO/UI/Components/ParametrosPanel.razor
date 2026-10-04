@@ -1,0 +1,137 @@
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,Staff")]
+@inject ParametrosService Parametros
+
+<div class="card shadow-sm border-0 parametros-panel my-2">
+    <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+            <div>
+                <h2 class="h6 mb-1">Parámetros económicos del reglamento</h2>
+                <p class="small text-secondary mb-0">
+                    Ajuste la Variable Vida (V) cuando la Asamblea actualice el Salario Mínimo Nacional.
+                    El valor queda guardado en este dispositivo.
+                </p>
+            </div>
+            <button type="button" class="btn-close" aria-label="Cerrar" @onclick="OnCerrado"></button>
+        </div>
+
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold" for="param-v">Variable Vida (V) &middot; Bs</label>
+                <input id="param-v" type="text" inputmode="decimal" class="form-control form-control-sm"
+                       value="@_variableVida" @oninput="e => _variableVida = e.Value?.ToString() ?? string.Empty" />
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold" for="param-horas">Carga horaria mensual &middot; h</label>
+                <input id="param-horas" type="text" inputmode="numeric" class="form-control form-control-sm"
+                       value="@_horasMensuales" @oninput="e => _horasMensuales = e.Value?.ToString() ?? string.Empty" />
+            </div>
+            <div class="col-12 col-md-4 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-success flex-grow-1" @onclick="Guardar"
+                        disabled="@_guardando">
+                    @(_guardando ? "Guardando..." : "Guardar")
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="Restaurar"
+                        title="Restaurar los valores oficiales del Reglamento 2026">
+                    Restaurar
+                </button>
+            </div>
+        </div>
+
+        @if (_mensaje is not null)
+        {
+            <div class="alert @(_error ? "alert-danger" : "alert-success") py-2 px-3 small mt-3 mb-0">
+                @_mensaje
+            </div>
+        }
+
+        <div class="row g-2 mt-3">
+            <div class="col-6 col-md-3">
+                <div class="derivado">
+                    <span class="derivado-label">Costo hora (CH = V/160)</span>
+                    <span class="derivado-valor">@FormatoBoliviano.Moneda(Parametros.Actual.CostoHora)</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="derivado">
+                    <span class="derivado-label">Honorario base (Hbase = V/4)</span>
+                    <span class="derivado-valor">@FormatoBoliviano.Moneda(Parametros.Actual.HonorarioBaseSemanal)</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="derivado">
+                    <span class="derivado-label">Costo hora mostrado</span>
+                    <span class="derivado-valor">@FormatoBoliviano.Moneda(Parametros.Actual.CostoHoraMostrado)/h</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="derivado">
+                    <span class="derivado-label">Estado</span>
+                    <span class="derivado-valor @(Parametros.Actual.UsaValoresOficiales ? "ok" : "warn")">
+                        @(Parametros.Actual.UsaValoresOficiales ? "Valores oficiales 2026" : "Valores actualizados")
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnCerrado { get; set; }
+
+    private string _variableVida = FormatoBoliviano.Numero(ParametrosCAO.VariableVidaPorDefecto);
+    private string _horasMensuales = "160";
+    private bool _guardando;
+    private bool _error;
+    private string? _mensaje;
+
+    protected override void OnInitialized() => SincronizarCampos();
+
+    private void SincronizarCampos()
+    {
+        _variableVida = FormatoBoliviano.Numero(Parametros.Actual.VariableVida);
+        _horasMensuales = FormatoBoliviano.Numero(Parametros.Actual.HorasMensuales);
+    }
+
+    private async Task Guardar()
+    {
+        _guardando = true;
+        _error = false;
+        _mensaje = null;
+
+        try
+        {
+            await Parametros.ActualizarAsync(
+                FormatoBoliviano.NumeroParseado(_variableVida),
+                FormatoBoliviano.NumeroParseado(_horasMensuales));
+            _mensaje = "Parámetros actualizados y guardados en este dispositivo.";
+        }
+        catch (Exception ex)
+        {
+            _error = true;
+            _mensaje = ex.Message;
+        }
+        finally
+        {
+            _guardando = false;
+            SincronizarCampos();
+        }
+    }
+
+    private async Task Restaurar()
+    {
+        _guardando = true;
+        _error = false;
+        _mensaje = null;
+
+        try
+        {
+            await Parametros.RestaurarValoresOficialesAsync();
+            _mensaje = "Se restauraron los valores oficiales del Reglamento 2026.";
+        }
+        finally
+        {
+            _guardando = false;
+            SincronizarCampos();
+        }
+    }
+}

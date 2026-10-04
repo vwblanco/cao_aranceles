@@ -1,0 +1,102 @@
+@inject MatrixRepository Matrices
+
+<fieldset class="mb-0">
+    <legend class="form-label small fw-semibold mb-2">
+        Etapas contratadas
+        <span class="text-secondary fw-normal">&middot; suman el factor de alcance Fa</span>
+    </legend>
+
+    <div class="perfil-selector mb-3">
+        <span class="small fw-semibold me-2">Perfil de alcance:</span>
+        @foreach (var perfil in Matrices.Perfiles)
+        {
+            <button type="button"
+                    class="btn btn-sm me-1 mb-1 @(_perfil == perfil.Id ? "btn-success" : "btn-outline-success")"
+                    @onclick="() => CambiarPerfil(perfil.Id)">
+                @perfil.Codigo
+            </button>
+        }
+        <span class="small text-secondary ms-1">@Matrices.ObtenerPerfil(_perfil).Nombre</span>
+    </div>
+
+    <div class="etapas-grid">
+        @foreach (var linea in Matrices.ObtenerDesgloseAlcance(_perfil, Contratadas))
+        {
+            <div class="etapa">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="@($"etapa-{linea.Etapa.Id}")"
+                           checked="@linea.Contratada"
+                           @onchange="e => Alternar(linea.Etapa.Id, (bool?)e.Value == true)" />
+                    <label class="form-check-label" for="@($"etapa-{linea.Etapa.Id}")">
+                        <span class="etapa-nombre">@linea.Etapa.Nombre</span>
+                        <span class="etapa-peso">Fa @FormatoBoliviano.Decimal(linea.Peso, 2)</span>
+                    </label>
+                </div>
+                <div class="etapa-descripcion">@linea.Etapa.Descripcion</div>
+            </div>
+        }
+    </div>
+
+    <div class="fa-resumen mt-3">
+        <div>
+            <span class="small text-secondary d-block">Factor de alcance acumulado (Fa)</span>
+            <span class="fa-valor">@FormatoBoliviano.Decimal(FactorAlcance, 2)</span>
+        </div>
+        <div>
+            <span class="small text-secondary d-block">Límite mínimo (Hbase &times; Fa)</span>
+            <span class="fa-valor">@FormatoBoliviano.Moneda(LimiteMinimo)</span>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="Todas">Todas</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="Ninguna">Ninguna</button>
+        </div>
+    </div>
+</fieldset>
+
+@code {
+    [Parameter] public PerfilAlcance Perfil { get; set; } = PerfilAlcance.Habitual;
+    [Parameter] public EventCallback<PerfilAlcance> PerfilChanged { get; set; }
+    [Parameter] public IReadOnlyCollection<EtapaProyecto> Contratadas { get; set; } = [];
+    [Parameter] public EventCallback<IReadOnlyCollection<EtapaProyecto>> ContratadasChanged { get; set; }
+    [Parameter] public ParametrosCAO? Parametros { get; set; }
+
+    private PerfilAlcance _perfil = PerfilAlcance.Habitual;
+
+    private double FactorAlcance => Matrices.CalcularFactorAlcance(_perfil, Contratadas);
+
+    private double LimiteMinimo => (Parametros?.HonorarioBaseSemanal ?? 0) * FactorAlcance;
+
+    protected override void OnParametersSet()
+    {
+        if (_perfil != Perfil)
+            _perfil = Perfil;
+    }
+
+    private async Task CambiarPerfil(PerfilAlcance perfil)
+    {
+        _perfil = perfil;
+        await PerfilChanged.InvokeAsync(perfil);
+    }
+
+    private async Task Alternar(EtapaProyecto etapa, bool seleccionada)
+    {
+        var actualizado = new List<EtapaProyecto>(Contratadas);
+
+        if (seleccionada)
+        {
+            if (!actualizado.Contains(etapa))
+                actualizado.Add(etapa);
+        }
+        else
+        {
+            actualizado.Remove(etapa);
+        }
+
+        await ContratadasChanged.InvokeAsync(actualizado);
+    }
+
+    private Task Todas() =>
+        ContratadasChanged.InvokeAsync(Matrices.Etapas.Select(e => e.Id).ToList());
+
+    private Task Ninguna() => ContratadasChanged.InvokeAsync([]);
+}

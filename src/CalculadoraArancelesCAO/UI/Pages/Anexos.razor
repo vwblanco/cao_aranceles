@@ -1,0 +1,139 @@
+﻿@page "/matrices"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject MatrixRepository Matrices
+
+<PageTitle>Anexos A y B | CAO</PageTitle>
+
+<h1 class="h4 mb-1">Anexos del Reglamento 2026</h1>
+<p class="text-secondary small mb-3">Matriz h<sub>(k,r)</sub> por tipologÃ­a y factor de alcance Fa por perfil.</p>
+
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <h2 class="h6">Anexo A &middot; Matriz h<sub>(k,r)</sub></h2>
+        <div class="table-responsive">
+            <table class="table table-sm small align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>TipologÃ­a</th>
+                        @foreach (var rango in Matrices.Rangos)
+                        {
+                            <th class="text-end">@rango.Etiqueta</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tipologia in Matrices.Tipologias)
+                    {
+                        <tr>
+                            <th scope="row">@tipologia.Nombre</th>
+                            @foreach (var factor in tipologia.MatrizH)
+                            {
+                                <td class="text-end">@FormatoBoliviano.Decimal(factor, 2)</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <h2 class="h6">Anexo B &middot; Factores de alcance Fa por perfil</h2>
+        <div class="table-responsive">
+            <table class="table table-sm small align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Etapa</th>
+                        @foreach (var perfil in Matrices.Perfiles)
+                        {
+                            <th class="text-end">@perfil.Codigo</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var etapa in Matrices.Etapas)
+                    {
+                        <tr>
+                            <th scope="row">@etapa.Nombre</th>
+                            @foreach (var perfil in Matrices.Perfiles)
+                            {
+                                <td class="text-end">@FormatoBoliviano.Decimal(perfil.ObtenerPeso(etapa.Id), 2)</td>
+                            }
+                        </tr>
+                    }
+                    <tr class="table-light fw-semibold">
+                        <td>Suma (proyecto completo)</td>
+                        @foreach (var perfil in Matrices.Perfiles)
+                        {
+                            <td class="text-end">@FormatoBoliviano.Decimal(Matrices.FactorAlcanceMaximoTeorico(perfil.Id), 2)</td>
+                        }
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <ul class="small text-secondary mt-3 mb-0">
+            @foreach (var perfil in Matrices.Perfiles)
+            {
+                <li><strong>@perfil.Codigo &middot; @perfil.Nombre:</strong> @perfil.Descripcion</li>
+            }
+        </ul>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <h2 class="h6">Ãrea 3 &middot; Factores de complejidad Fj</h2>
+        <div class="table-responsive">
+            <table class="table table-sm small align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>CÃ³digo</th>
+                        <th>IntervenciÃ³n</th>
+                        <th class="text-end">Fj</th>
+                        <th>DescripciÃ³n</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sub in Matrices.SubAreasArea3)
+                    {
+                        <tr>
+                            <td>@sub.Codigo</td>
+                            <td>@sub.Nombre</td>
+                            <td class="text-end">@FormatoBoliviano.Decimal(sub.Fj, 2)</td>
+                            <td class="text-secondary">@sub.Descripcion</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <h2 class="h6">Ãrea 6 &middot; Escala decreciente</h2>
+        <div class="table-responsive">
+            <table class="table table-sm small align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tramo</th>
+                        <th class="text-end">Porcentaje</th>
+                        <th>DescripciÃ³n</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tramo in Matrices.EscalaArea6)
+                    {
+                        <tr>
+                            <td>@tramo.RangoMostrado</td>
+                            <td class="text-end">@FormatoBoliviano.Porcentaje(tramo.Porcentaje)</td>
+                            <td class="text-secondary">@tramo.Descripcion</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

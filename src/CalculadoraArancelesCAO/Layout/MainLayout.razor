@@ -1,0 +1,186 @@
+﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject ParametrosService Parametros
+@inject CotizacionService Cotizacion
+@inject MatrixRepository Matrices
+@inject NavigationManager Navigation
+@inject IJSRuntime Js
+@inject AutenticacionService Auth
+
+<div class="app-shell d-flex flex-column min-vh-100">
+
+    <header class="app-header sticky-top">
+        <div class="container">
+            <div class="d-flex align-items-center gap-2 py-2">
+                <a class="marca d-flex align-items-center gap-2 text-decoration-none" href="">
+                    <img src="CAO-192.png" height="42" alt="CAO" class="me-2" />
+                    <span class="marca-texto">
+                        <span class="marca-nombre">Colegio de Arquitectos de Oruro</span>
+                        <span class="marca-sub">Calculadora de Aranceles &middot; Reglamento 2026</span>
+                    </span>
+                </a>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="text-end me-2 d-none d-md-block">
+                                    <div class="small fw-semibold">@context.User.Identity?.Name</div>
+                                    <div class="small text-muted">@context.User.FindFirst("NumeroRegistro")?.Value</div>
+                                </div>
+                                <div class="avatar-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                    @((context.User.Identity?.Name ?? "U")[0])
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-light ms-2" @onclick="LogoutAsync">
+                                    Salir
+                                </button>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <button type="button" class="btn btn-sm btn-outline-light" @onclick="IrAlLogin">
+                                Ingresar
+                            </button>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                    <AuthorizeView Roles="Admin,Staff">
+                        <Authorized>
+                            <button type="button" class="btn btn-sm btn-light text-warning fw-semibold d-none d-md-inline ms-2"
+                                    @onclick="AlternarPanelParametros" title="Parámetros económicos">
+                                Parámetros
+                            </button>
+                        </Authorized>
+                    </AuthorizeView>
+                    <button type="button" class="btn btn-sm btn-light text-success fw-semibold d-none d-md-inline"
+                            @onclick="InstalarApp">
+                        Instalar app
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    @if (_panelParametros)
+    {
+        <div class="container">
+            <ParametrosPanel OnCerrado="AlternarPanelParametros" />
+        </div>
+    }
+
+    <nav class="area-nav sticky-top">
+        <div class="container">
+            <div class="nav-scroll">
+                <AuthorizeView>
+                    <Authorized>
+                        @foreach (var item in Matrices.ItemsNavegacion)
+                        {
+                            var activo = item.Tipo == "area" ? _rutaActual == item.Ruta :
+                                         item.Tipo == "reglamento" ? _rutaActual == item.Ruta :
+                                         item.Tipo == "tramites" ? _rutaActual.StartsWith(item.Ruta) :
+                                         _rutaActual.StartsWith(item.Ruta);
+
+                            // Filtrar items de admin/staff
+                            var mostrar = item.Tipo switch
+                            {
+                                "admin" => context.User.IsInRole("Admin") || context.User.IsInRole("Staff"),
+                                _ => true
+                            };
+
+                            if (!mostrar) continue;
+
+                            <a class="area-chip @(activo ? "activo" : string.Empty)" href="@item.Ruta">
+                                <span class="area-codigo">@item.Codigo</span>
+                                <span class="area-nombre">@item.Nombre</span>
+                            </a>
+                        }
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow-1 py-3">
+        <div class="container">
+            @if (_listo)
+            {
+                @Body
+            }
+            else
+            {
+                <div class="cargando">
+                    <img src="CAO-192.png" height="64" alt="CAO" class="cargando-logo" />
+                    <div class="cargando-texto">Cargando parámetros…</div>
+                </div>
+            }
+        </div>
+    </main>
+
+    <footer class="app-footer mt-4 py-3">
+        <div class="container small text-center">
+            <div class="fw-semibold">@ReporteHtmlBuilder.NombreInstitucion</div>
+            <div>Cálculo referencial sujeto al Reglamento de Aranceles 2026 y a la Ley N.° 1373.</div>
+            <div class="mt-1">
+                Costo hora @FormatoBoliviano.Moneda(Parametros.Actual.CostoHora) &middot;
+                Honorario base @FormatoBoliviano.Moneda(Parametros.Actual.HonorarioBaseSemanal)
+                @if (!Parametros.Actual.UsaValoresOficiales)
+                {
+                    <span class="badge text-bg-warning ms-1">V actualizada por la asamblea</span>
+                }
+            </div>
+        </div>
+    </footer>
+</div>
+
+@code {
+    private bool _panelParametros;
+    private string _rutaActual = string.Empty;
+    private IDisposable? _suscripcion;
+    private IJSObjectReference? _moduloPwa;
+    private bool _listo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _rutaActual = RutaActual();
+        _suscripcion = Parametros.Suscribir(() => InvokeAsync(StateHasChanged));
+        Navigation.LocationChanged += AlCambiarRuta;
+
+        await Auth.RestaurarSesionAsync();
+        await Parametros.CargarAsync();
+        await Cotizacion.CargarAsync();
+        _listo = true;
+    }
+
+    private void AlCambiarRuta(object? sender, LocationChangedEventArgs e)
+    {
+        _rutaActual = RutaActual();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string RutaActual() => Navigation.ToBaseRelativePath(Navigation.Uri);
+
+    private void AlternarPanelParametros() => _panelParametros = !_panelParametros;
+
+    private async Task InstalarApp()
+    {
+        try
+        {
+            _moduloPwa ??= await Js.InvokeAsync<IJSObjectReference>("import", "./js/pwa.js");
+            await _moduloPwa.InvokeVoidAsync("instalar");
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    private void IrAlLogin() => Navigation.NavigateTo("/login");
+
+    private async Task LogoutAsync()
+    {
+        await Auth.LogoutAsync();
+        Navigation.NavigateTo("/login", true);
+    }
+
+    public void Dispose()
+    {
+        _suscripcion?.Dispose();
+        Navigation.LocationChanged -= AlCambiarRuta;
+    }
+}

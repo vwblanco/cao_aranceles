@@ -1,0 +1,215 @@
+@page "/login"
+@inject AutenticacionService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>Ingresar | CAO</PageTitle>
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center login-fondo">
+    <div class="card shadow-lg border-0 w-100" style="max-width: 420px;">
+        <div class="card-header text-white text-center py-3" style="background: var(--cao-naranja);">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                <img src="CAO-192.png" height="48" alt="CAO" />
+            </div>
+            <div class="fw-bold fs-5">Calculadora de Aranceles</div>
+            <small class="opacity-75">Colegio de Arquitectos de Oruro</small>
+        </div>
+
+        <div class="card-body p-4">
+            <h4 class="text-center mb-3">Acceso Restringido</h4>
+            <p class="text-muted small text-center mb-4">
+                Ingrese sus credenciales de colegiado para acceder a la calculadora de aranceles
+            </p>
+
+            @if (ErrorMessage is not null)
+            {
+                <div class="alert alert-danger py-2 px-3 small mb-3" role="alert">
+                    @ErrorMessage
+                </div>
+            }
+
+            @if (ListaVacia)
+            {
+                <div class="alert alert-warning py-2 px-3 small">
+                    Todavia no hay una lista de afiliados cargada. El administrador debe
+                    cargar el archivo Excel desde la pagina de administracion.
+                </div>
+            }
+
+            @if (PedirCi)
+            {
+                <div class="alert alert-info py-2 px-3 small mb-3">
+                    <strong>Bienvenido, @NombreCompletoGuardado</strong><br />
+                    Su numero de registro <strong>@RegistroGuardado</strong> no tiene CI asociado.
+                    Ingrese su Carnet de Identidad para proteger su acceso en futuros ingresos.
+                </div>
+
+                <form @onsubmit="HandleCompletarCiAsync" @onsubmit:preventDefault>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="ciNueva">Carnet de Identidad</label>
+                        <input type="text" class="form-control form-control-sm text-uppercase" id="ciNueva"
+                               value="@CiNueva" @oninput="e => CiNueva = e.Value?.ToString()?.ToUpperInvariant() ?? string.Empty"
+                               placeholder="1234567" autocomplete="off" maxlength="12" required />
+                        <div class="form-text">Ej: 1234567 LP / CB / SC / OR / PT / CH / BE (o solo numeros)</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2" disabled="@CargandoCi">
+                        @if (CargandoCi)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <span>Guardar y continuar</span>
+                        }
+                    </button>
+                </form>
+            }
+            else
+            {
+                <form @onsubmit="HandleLoginAsync" @onsubmit:preventDefault autocomplete="off">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="nombre">Nombre completo</label>
+                        <input type="text" class="form-control form-control-sm" id="nombre"
+                               value="@Nombre" @oninput="e => Nombre = e.Value?.ToString() ?? string.Empty"
+                               autocomplete="off" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="numeroRegistro">N&ordm; Registro CAO</label>
+                        <input type="text" class="form-control form-control-sm" id="numeroRegistro"
+                               value="@NumeroRegistro" @oninput="e => NumeroRegistro = e.Value?.ToString() ?? string.Empty"
+                               autocomplete="off" inputmode="numeric" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="ci">
+                            Carnet de identidad <span class="fw-normal text-muted">(si figura registrado)</span>
+                        </label>
+                        <input type="text" class="form-control form-control-sm" id="ci"
+                               value="@CI" @oninput="e => CI = e.Value?.ToString() ?? string.Empty"
+                               autocomplete="new-password" maxlength="20" />
+                        <div class="form-text">
+                            (respeta mayúsculas/minúsculas)
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="recordar" @bind="Recordar" />
+                        <label class="form-check-label small" for="recordar">Recordar sesi&oacute;n</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2" disabled="@Cargando">
+                        @if (Cargando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Verificando...</span>
+                        }
+                        else
+                        {
+                            <span>Ingresar</span>
+                        }
+                    </button>
+                </form>
+            }
+
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <strong>Colegio de Arquitectos de Oruro</strong><br />
+                    Calculadora de Aranceles &middot; Reglamento 2026
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string Nombre { get; set; } = string.Empty;
+    private string NumeroRegistro { get; set; } = string.Empty;
+    private string CI { get; set; } = string.Empty;
+    private bool Recordar { get; set; }
+    private bool Cargando { get; set; }
+    private string? ErrorMessage { get; set; }
+    private bool ListaVacia { get; set; }
+
+    // Estado para enrollamiento de CI
+    private bool PedirCi { get; set; }
+    private string NombreCompletoGuardado { get; set; } = string.Empty;
+    private string RegistroGuardado { get; set; } = string.Empty;
+    private string CiNueva { get; set; } = string.Empty;
+    private bool CargandoCi { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Recordar = true;
+        ListaVacia = (await Auth.ObtenerAfiliadosAsync()).Count == 0;
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        ErrorMessage = null;
+        Cargando = true;
+
+        try
+        {
+            // ResultadoLogin ahora: (Exitoso, Mensaje, RequiereCi, Rol)
+            var resultado = await Auth.LoginAsync(Nombre, NumeroRegistro, CI, Recordar);
+
+            if (resultado.Exitoso)
+            {
+                if (resultado.RequiereCi)
+                {
+                    // Login OK pero falta CI → cambiar a formulario de CI
+                    PedirCi = true;
+                    NombreCompletoGuardado = Nombre;
+                    RegistroGuardado = NumeroRegistro;
+                    CiNueva = string.Empty;
+                }
+                else
+                {
+                    Navigation.NavigateTo("/", true);
+                }
+            }
+            else
+            {
+                ErrorMessage = resultado.Mensaje;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error inesperado: {ex.Message}";
+        }
+        finally
+        {
+            Cargando = false;
+        }
+    }
+
+    private async Task HandleCompletarCiAsync()
+    {
+        ErrorMessage = null;
+        CargandoCi = true;
+
+        try
+        {
+            var ok = await Auth.CompletarCedulaAsync(CiNueva);
+
+            if (ok)
+            {
+                Navigation.NavigateTo("/", true);
+            }
+            else
+            {
+                ErrorMessage = "No se pudo guardar la CI. Verifique que coincida con la lista o intente nuevamente.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error inesperado: {ex.Message}";
+        }
+        finally
+        {
+            CargandoCi = false;
+        }
+    }
+}

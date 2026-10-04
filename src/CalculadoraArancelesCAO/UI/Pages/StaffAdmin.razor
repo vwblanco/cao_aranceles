@@ -1,0 +1,195 @@
+@page "/staff-admin"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+@using CalculadoraArancelesCAO.UI.Services
+@inject AfiliadosService Afiliados
+@inject IJSRuntime JS
+
+<PageTitle>Administrar Staff | CAO</PageTitle>
+
+<h1 class="h4 mb-3">
+    <span class="me-2">&#128274;</span> Gestión de Personal Staff
+</h1>
+
+<p class="text-muted small mb-4">
+    Cree credenciales para el personal autorizado (1-2 personas) que podrá
+    cargar listas de afiliados y modificar parámetros económicos.
+    Cada credencial tiene su propia contraseña que usted entrega personalmente.
+</p>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Crear nuevo Staff</h5>
+        <form @onsubmit="CrearStaffAsync" @onsubmit:preventDefault>
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-semibold" for="nuevoRegistro">N&ordm; Registro CAO</label>
+                    <input type="text" class="form-control form-control-sm" id="nuevoRegistro"
+                           value="@NuevoRegistro" @oninput="e => NuevoRegistro = e.Value?.ToString() ?? string.Empty"
+                           placeholder="12345" inputmode="numeric" required />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-semibold" for="nuevoNombre">Nombre completo</label>
+                    <input type="text" class="form-control form-control-sm" id="nuevoNombre"
+                           value="@NuevoNombre" @oninput="e => NuevoNombre = e.Value?.ToString() ?? string.Empty"
+                           placeholder="APELLIDOS NOMBRES" autocomplete="name" required />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-semibold" for="nuevaClave">Contraseña</label>
+                    <div class="input-group">
+                        <input type="@(MostrarClave ? "text" : "password")" class="form-control form-control-sm" id="nuevaClave"
+                               value="@NuevaClave" @oninput="e => NuevaClave = e.Value?.ToString() ?? string.Empty"
+                               placeholder="Contraseña segura" required minlength="8" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="() => MostrarClave = !MostrarClave"
+                                title="Mostrar/ocultar">
+                            @(MostrarClave ? "&#128065;" : "&#128064;")
+                        </button>
+                    </div>
+                    <div class="form-text">Min. 8 caracteres. An&oacute;tela y entr&eacute;guela personalmente.</div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary" disabled="@(Creando || string.IsNullOrWhiteSpace(NuevoRegistro) || string.IsNullOrWhiteSpace(NuevoNombre) || string.IsNullOrWhiteSpace(NuevaClave) || (NuevaClave?.Length ?? 0) < 8)">
+                    @if (Creando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span>Creando...</span>
+                    }
+                    else
+                    {
+                        <span>Crear Staff</span>
+                    }
+                </button>
+            </div>
+            @if (MensajeCrear is not null)
+            {
+                <div class="alert @(ExitoCrear ? "alert-success" : "alert-danger") py-2 px-3 small mt-3 mb-0">
+                    @MensajeCrear
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+@if (StaffList.Count > 0)
+{
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Staff Actual (<strong>@StaffList.Count</strong>)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 100px;">N&ordm; Registro</th>
+                            <th>Nombre</th>
+                            <th style="width: 160px;">Creado</th>
+                            <th style="width: 100px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in StaffList)
+                        {
+                            <tr>
+                                <td class="small fw-medium">@s.NumeroRegistro</td>
+                                <td class="small">@s.Nombre</td>
+                                <td class="small text-muted">@s.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            @onclick="() => ConfirmarEliminarStaff(s)"
+                                            title="Eliminar este staff">
+                                        &#128465;
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info mt-4">
+        No hay personal staff creado. Use el formulario arriba para agregar el primero.
+    </div>
+}
+
+@code {
+    private string NuevoRegistro { get; set; } = string.Empty;
+    private string NuevoNombre { get; set; } = string.Empty;
+    private string NuevaClave { get; set; } = string.Empty;
+    private bool MostrarClave { get; set; }
+    private bool Creando { get; set; }
+    private string? MensajeCrear { get; set; }
+    private bool ExitoCrear { get; set; }
+    private List<StaffCredencial> StaffList { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarStaffAsync();
+    }
+
+    private async Task CargarStaffAsync()
+    {
+        StaffList = await Afiliados.ObtenerStaffAsync();
+    }
+
+    private async Task CrearStaffAsync()
+    {
+        Creando = true;
+        MensajeCrear = null;
+        ExitoCrear = false;
+
+        try
+        {
+            var ok = await Afiliados.AgregarStaffAsync(NuevoRegistro, NuevoNombre, NuevaClave);
+
+            if (ok)
+            {
+                MensajeCrear = $"Staff '{NuevoNombre}' (Reg. {NuevoRegistro}) creado correctamente. Entregue la contraseña personalmente.";
+                ExitoCrear = true;
+                NuevoRegistro = string.Empty;
+                NuevoNombre = string.Empty;
+                NuevaClave = string.Empty;
+                await CargarStaffAsync();
+            }
+            else
+            {
+                MensajeCrear = "Ya existe un staff con ese número de registro.";
+                ExitoCrear = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            MensajeCrear = $"Error: {ex.Message}";
+            ExitoCrear = false;
+        }
+        finally
+        {
+            Creando = false;
+        }
+    }
+
+    private async Task ConfirmarEliminarStaff(StaffCredencial staff)
+    {
+        var confirmado = await JS.InvokeAsync<bool>(
+            "confirm",
+            $"Eliminar al staff '{staff.Nombre}' (Reg. {staff.NumeroRegistro})? Esta acci\u00f3n no se puede deshacer.");
+
+        if (confirmado)
+        {
+            var ok = await Afiliados.EliminarStaffAsync(staff.NumeroRegistro);
+            if (ok)
+            {
+                await CargarStaffAsync();
+            }
+            else
+            {
+                MensajeCrear = "No se pudo eliminar. Intente nuevamente.";
+                ExitoCrear = false;
+            }
+        }
+    }
+}

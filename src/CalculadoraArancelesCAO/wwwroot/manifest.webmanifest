@@ -1,0 +1,57 @@
+{
+  "name": "Calculadora de Aranceles CAO - Colegio de Arquitectos de Oruro",
+  "short_name": "Aranceles CAO",
+  "description": "Cálculo de honorarios profesionales conforme al Reglamento de Aranceles 2026 del Colegio de Arquitectos de Oruro y la Ley N.° 1373.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
+  "background_color": "#fef5e7",
+  "theme_color": "#e67e22",
+  "lang": "es-BO",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "utilities"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "CAO-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "CAO-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "CAO-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Área 1 — Servicios de arquitectura",
+      "short_name": "Área 1",
+      "url": "area1",
+      "icons": [{ "src": "CAO-192.png", "type": "image/png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Área 4A — Avalúos y peritajes",
+      "short_name": "Avalúos",
+      "url": "area4a",
+      "icons": [{ "src": "CAO-192.png", "type": "image/png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Trámites y tarifas",
+      "short_name": "Trámites",
+      "url": "tramites",
+      "icons": [{ "src": "CAO-192.png", "type": "image/png", "sizes": "192x192" }]
+    }
+  ]
+}
