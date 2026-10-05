@@ -134,7 +134,11 @@
     private string _rutaActual = string.Empty;
     private IDisposable? _suscripcion;
     private IJSObjectReference? _moduloPwa;
+    private IJSObjectReference? _moduloActividad;
+    private DotNetObjectReference<MainLayout>? _refActividad;
+    private System.Threading.Timer? _temporizadorBloqueo;
     private bool _listo;
+    private bool _verificandoBloqueo;
 
     protected override async Task OnInitializedAsync()
     {
@@ -146,6 +150,74 @@
         await Parametros.CargarAsync();
         await Cotizacion.CargarAsync();
         _listo = true;
+
+        await IniciarVigilanciaDeInactividadAsync();
+    }
+
+    /// <summary>
+    /// Activa el bloqueo por inactividad: se escucha la actividad del usuario para
+    /// reiniciar el reloj y, cada 30 segundos, se comprueba si ya vencio.
+    /// Si vencio se lleva al ingreso, donde solo se pide el PIN.
+    /// </summary>
+    private async Task IniciarVigilanciaDeInactividadAsync()
+    {
+        try
+        {
+            _refActividad = DotNetObjectReference.Create(this);
+            _moduloActividad = await Js.InvokeAsync<IJSObjectReference>("import", "./js/actividad.js");
+            await _moduloActividad.InvokeVoidAsync("registrar", _refActividad);
+        }
+        catch (JSException)
+        {
+            // Sin JS disponible la app sigue funcionando, solo sin bloqueo automatico.
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+
+        _temporizadorBloqueo = new System.Threading.Timer(
+            async _ => await InvokeAsync(ComproquearBloqueoAsync),
+            null,
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(30));
+    }
+
+    [JSInvokable]
+    public async Task NotificarActividad()
+    {
+        try
+        {
+            await Auth.MarcarActividadAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // Circuito cerrado durante la navegacion.
+        }
+    }
+
+    private async Task ComproquearBloqueoAsync()
+    {
+        if (_verificandoBloqueo || _rutaActual.Equals("login", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _verificandoBloqueo = true;
+
+        try
+        {
+            if (await Auth.DeboBloquearAsync())
+            {
+                Navigation.NavigateTo("/login");
+            }
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        finally
+        {
+            _verificandoBloqueo = false;
+        }
     }
 
     private void AlCambiarRuta(object? sender, LocationChangedEventArgs e)
@@ -182,5 +254,8 @@
     {
         _suscripcion?.Dispose();
         Navigation.LocationChanged -= AlCambiarRuta;
+        _temporizadorBloqueo?.Dispose();
+        _refActividad?.Dispose();
+        _moduloActividad?.DisposeAsync().AsTask().GetAwaiter().GetResult();
     }
 }

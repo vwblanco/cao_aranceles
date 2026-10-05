@@ -22,7 +22,7 @@ public sealed class DiagnosticoLoginReal
     {
         if (!File.Exists(Ruta)) return;
 
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         using var stream = File.OpenRead(Ruta);
         var resultado = servicio.CargarDesdeExcelAsync(stream).GetAwaiter().GetResult();
 
@@ -43,7 +43,7 @@ public sealed class DiagnosticoLoginReal
             Console.WriteLine($"  TieneCedula: {victor.TieneCedula}");
 
             // Probar validación
-            var servicio2 = new AfiliadosService(new DiagnosticoLoginReal.Almacenamiento());
+            var servicio2 = new AfiliadosService(new DiagnosticoLoginReal.Almacenamiento(), HttpDePrueba.SinIndice());
             // Re-cargar en el mismo servicio
             using var stream2 = File.OpenRead(Ruta);
             servicio2.CargarDesdeExcelAsync(stream2).GetAwaiter().GetResult();
@@ -60,7 +60,7 @@ public sealed class DiagnosticoLoginReal
 
             // Test 2: ValidarAccesoAsync with CI
             Console.WriteLine("\n--- Test ValidarAccesoAsync con CI ---");
-            var servicio3 = new AfiliadosService(new Almacenamiento());
+            var servicio3 = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
             using var stream3 = File.OpenRead(Ruta);
             servicio3.CargarDesdeExcelAsync(stream3).GetAwaiter().GetResult();
 

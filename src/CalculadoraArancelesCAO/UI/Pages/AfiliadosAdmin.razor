@@ -179,7 +179,7 @@
                         {
                             <tr class="@(Seleccionados.Contains(a.NumeroRegistro) ? "table-active" : "")">
                                 <td>
-                                    <input type="checkbox" class="form-check-input" checked="@Seleccionados.Contains(a.NumeroRegistro)" @onchange="e => ToggleSeleccion(a.NumeroRegistro, (bool)e.Value)" />
+                                    <input type="checkbox" class="form-check-input" checked="@Seleccionados.Contains(a.NumeroRegistro)" @onchange="e => ToggleSeleccion(a.NumeroRegistro, e.Value is true)" />
                                 </td>
                                 <td class="small">@a.Correlativo</td>
                                 <td class="small fw-medium">@a.NumeroRegistro</td>

@@ -48,7 +48,7 @@ public sealed class ListaRealColegioTests
             return;
         }
 
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         await using var stream = File.OpenRead(ruta);
 
         var resultado = await servicio.CargarDesdeExcelAsync(stream);
@@ -81,7 +81,7 @@ public sealed class ListaRealColegioTests
             return;
         }
 
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         await using var stream = File.OpenRead(ruta);
         await servicio.CargarDesdeExcelAsync(stream);
 
@@ -107,7 +107,7 @@ public sealed class ListaRealColegioTests
             return;
         }
 
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         await using var stream = File.OpenRead(ruta);
         await servicio.CargarDesdeExcelAsync(stream);
 

@@ -86,7 +86,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task CargarDesdeExcel_ReconoceLasCuatroColumnasDelColegio()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
 
         var resultado = await servicio.CargarDesdeExcelAsync(ExcelValido());
 
@@ -105,7 +105,7 @@ public sealed class AfiliadosServiceTests
     public async Task CargarDesdeExcel_PersisteLaListaEnAlmacenamiento()
     {
         var almacenamiento = new Almacenamiento();
-        var servicio = new AfiliadosService(almacenamiento);
+        var servicio = new AfiliadosService(almacenamiento, HttpDePrueba.SinIndice());
 
         await servicio.CargarDesdeExcelAsync(ExcelValido());
 
@@ -125,7 +125,7 @@ public sealed class AfiliadosServiceTests
         paquete.SaveAs(salida);
         salida.Position = 0;
 
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         var resultado = await servicio.CargarDesdeExcelAsync(salida);
 
         Assert.False(resultado.Exitoso);
@@ -137,7 +137,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task BuscarAfiliado_EncuentraPorRegistroYCi()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         await servicio.CargarDesdeExcelAsync(ExcelValido());
 
         var encontrado = await servicio.BuscarAfiliadoAsync("12345", "1234567 lp");
@@ -149,7 +149,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task BuscarAfiliado_SinListaDevuelveNull()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
 
         Assert.Null(await servicio.BuscarAfiliadoAsync("12345", "1234567 LP"));
         Assert.False(await servicio.ValidarAccesoAsync("12345", "1234567 LP"));
@@ -158,7 +158,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task BuscarAfiliado_CiInexistenteDevuelveNull()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         await servicio.CargarDesdeExcelAsync(ExcelValido());
 
         Assert.Null(await servicio.BuscarAfiliadoAsync("12345", "9999999 XX"));
@@ -168,7 +168,7 @@ public sealed class AfiliadosServiceTests
     public async Task LimpiarAsync_EliminaLaListaPersistida()
     {
         var almacenamiento = new Almacenamiento();
-        var servicio = new AfiliadosService(almacenamiento);
+        var servicio = new AfiliadosService(almacenamiento, HttpDePrueba.SinIndice());
         await servicio.CargarDesdeExcelAsync(ExcelValido());
 
         await servicio.LimpiarAsync();
@@ -180,7 +180,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task EncabezadosRealesDelColegio_SonDetectados()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
 
         var resultado = await servicio.CargarDesdeExcelAsync(ExcelEstiloColegio());
 
@@ -194,7 +194,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task AfiliadoSinCedulaEnElArchivo_SeCargaYCuentaEnElAviso()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
 
         var resultado = await servicio.CargarDesdeExcelAsync(ExcelEstiloColegio());
 
@@ -207,7 +207,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task ValidarAcceso_AfiliadoSinCedulaIngresaConRegistroYNombre()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         await servicio.CargarDesdeExcelAsync(ExcelEstiloColegio());
 
         var ok = await servicio.ValidarAccesoAsync("174", string.Empty, "Mendizabal Jara Luis");
@@ -221,7 +221,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task ValidarAcceso_AfiliadoConCedula_RequiereCiSiFaltaEnLogin()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         await servicio.CargarDesdeExcelAsync(ExcelEstiloColegio());
 
         // Afiliado con CI en la lista: si no se proveyó CI en el login,
@@ -244,7 +244,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task ValidarAcceso_RegistroInexistente_DaMensajeEspecifico()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         await servicio.CargarDesdeExcelAsync(ExcelEstiloColegio());
 
         var resultado = await servicio.ValidarAccesoAsync("999999", "1234567", "Quien Sea");
@@ -256,7 +256,7 @@ public sealed class AfiliadosServiceTests
     [Fact]
     public async Task ValidarAcceso_SinListaCargada_AvisarContactarAlColegio()
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
 
         var resultado = await servicio.ValidarAccesoAsync("12345", "1234567", "BLANCO VICTOR");
 
@@ -270,7 +270,7 @@ public sealed class AfiliadosServiceTests
     [InlineData("BLANCO VICTOR", "blanco  victor")]
     public void NombresAdmitenVariacionesDeMayusculasYOrden(string registrado, string ingressado)
     {
-        var servicio = new AfiliadosService(new Almacenamiento());
+        var servicio = new AfiliadosService(new Almacenamiento(), HttpDePrueba.SinIndice());
         var almacen = (Almacenamiento)typeof(AfiliadosService)
             .GetField("_localStorage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
             .GetValue(servicio)!;

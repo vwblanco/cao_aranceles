@@ -8,15 +8,24 @@ namespace CalculadoraArancelesCAO.UI.Services;
 public sealed class AfiliadosService
 {
     private const string ClaveLista = "cao.afiliados.lista";
+    private const string ClaveIndice = "cao.acceso.indice";
     private const long TamanoMaximo = 10L * 1024 * 1024;
+
+    /// <summary>Ruta del indice que viaja dentro de la aplicacion.</summary>
+    public const string RutaIndice = "data/indice-acceso.json";
 
     private static readonly JsonSerializerOptions OpcionesJson = new(JsonSerializerDefaults.Web);
 
     private readonly ILocalStorageService _localStorage;
+    private readonly HttpClient _http;
 
-    public AfiliadosService(ILocalStorageService localStorage)
+    private IndiceAccesoArchivo? _indice;
+    private bool _indiceCargado;
+
+    public AfiliadosService(ILocalStorageService localStorage, HttpClient http)
     {
         _localStorage = localStorage;
+        _http = http;
     }
 
     public async Task<ResultadoCarga> CargarDesdeExcelAsync(Stream archivoExcel)
@@ -235,6 +244,126 @@ public sealed class AfiliadosService
     }
 
     public Task LimpiarAsync() => _localStorage.RemoveItemAsync(ClaveLista);
+
+    // ===== Indice de acceso que viaja con la aplicacion =====
+    //
+    // La lista completa solo existe en los dispositivos donde el administrador
+    // cargo el Excel. Para que un afiliado recien instalado pueda ingresar, el
+    // indice (registro + hash de la credencial, sin nombres ni CI en texto plano)
+    // se distribuye dentro de la app y se valida en el dispositivo.
+
+    /// <summary>
+    /// Devuelve el indice de acceso. Se reintenta la descarga en cada arranque para
+    /// recoger afiliados nuevos, y si no hay conexion se usa la copia cacheada.
+    ///
+    /// La peticion se envia con no-cache porque los archivos estaticos de Vercel se
+    /// sirven con cache largo: sin esto, un afiliado recien incorporado quedaria
+    /// sin acceso indefinidamente en los telefonos que ya tenian la app instalada.
+    /// </summary>
+    public async Task<IndiceAccesoArchivo?> ObtenerIndiceAsync()
+    {
+        if (_indiceCargado)
+        {
+            return _indice;
+        }
+
+        _indiceCargado = true;
+
+        var enCache = await _localStorage.GetItemAsync(ClaveIndice);
+        _indice = IndiceAcceso.Deserializar(enCache);
+
+        try
+        {
+            using var peticion = new HttpRequestMessage(HttpMethod.Get, RutaIndice);
+            peticion.Headers.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue
+            {
+                NoCache = true,
+                NoStore = true
+            };
+
+            using var respuesta = await _http.SendAsync(peticion);
+            if (respuesta.IsSuccessStatusCode)
+            {
+                var json = await respuesta.Content.ReadAsStringAsync();
+                var descargado = IndiceAcceso.Deserializar(json);
+
+                // Solo se reescribe la cache si el contenido cambio de verdad.
+                if (descargado is not null && json != enCache)
+                {
+                    await _localStorage.SetItemAsync(ClaveIndice, json);
+                    _indice = descargado;
+                }
+            }
+        }
+        catch (HttpRequestException)
+        {
+            // Sin conexion: se sigue con la copia cacheada.
+        }
+        catch (TaskCanceledException)
+        {
+            // Sin conexion o timeout: se sigue con la copia cacheada.
+        }
+
+        return _indice;
+    }
+
+    /// <summary>Valida el acceso contra el indice de acceso embebido.</summary>
+    public async Task<bool> ValidarConIndiceAsync(string numeroRegistro, string ci, string nombre)
+    {
+        var indice = await ObtenerIndiceAsync();
+        if (indice is null)
+        {
+            return false;
+        }
+
+        return IndiceAcceso.Coincide(indice, numeroRegistro, ci, nombre);
+    }
+
+    /// <summary>Indica si el indice exige cedula de identidad para ese registro.</summary>
+    public async Task<bool> IndiceExigeCedulaAsync(string numeroRegistro)
+    {
+        var indice = await ObtenerIndiceAsync();
+        return indice is not null && IndiceAcceso.ExigeCedula(indice, numeroRegistro);
+    }
+
+    /// <summary>Cantidad de afiliados incluidos en el indice; 0 si no hay indice.</summary>
+    public async Task<int> ObtenerTotalIndiceAsync()
+    {
+        var indice = await ObtenerIndiceAsync();
+        return indice?.Total ?? 0;
+    }
+
+    /// <summary>
+    /// Genera el contenido de data/indice-acceso.json a partir de la lista que el
+    /// administrador tiene cargada. Ese archivo se versiona en el repositorio para
+    /// que viaje con cada nueva instalacion.
+    /// </summary>
+    public async Task<(bool Exitoso, string Json, int Total)> GenerarIndiceAsync()
+    {
+        var lista = await ObtenerAfiliadosAsync();
+        if (lista.Count == 0)
+        {
+            return (false, string.Empty, 0);
+        }
+
+        var entradas = lista.Select(a => new EntradaAfiliado
+        {
+            NumeroRegistro = a.NumeroRegistro,
+            Nombre = a.Nombre,
+            CI = a.CI
+        });
+
+        var indice = IndiceAcceso.Construir(entradas);
+        return (true, IndiceAcceso.Serializar(indice), indice.Total);
+    }
+
+    /// <summary>Descarta el indice cacheado para forzar una recarga.</summary>
+    public async Task InvalidarIndiceAsync()
+    {
+        _indice = null;
+        _indiceCargado = false;
+        await _localStorage.RemoveItemAsync(ClaveIndice);
+    }
 
     // ===== Staff credentials (configurables por Admin) =====
     private const string ClaveStaff = "cao.staff.credenciales";
