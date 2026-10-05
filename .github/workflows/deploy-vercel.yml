@@ -27,11 +27,14 @@ jobs:
       - name: Build and Publish
         run: dotnet publish src/CalculadoraArancelesCAO/CalculadoraArancelesCAO.csproj -c Release -o publish
 
+      # Se invoca la CLI de Vercel directamente en vez de usar amondnet/vercel-action:
+      # esa action fija npx vercel@25.1.0 y las versiones antiguas no reconocen los
+      # tokens actuales (vcp_), por lo que el deploy fallaba con "User not found".
+      # VERCEL_ORG_ID y VERCEL_PROJECT_ID permiten vincular el proyecto sin vercel link.
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: ./publish/wwwroot
+        working-directory: ./publish/wwwroot
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@latest --prod --yes
