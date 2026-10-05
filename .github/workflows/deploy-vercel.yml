@@ -31,6 +31,20 @@ jobs:
       # esa action fija npx vercel@25.1.0 y las versiones antiguas no reconocen los
       # tokens actuales (vcp_), por lo que el deploy fallaba con "User not found".
       # VERCEL_ORG_ID y VERCEL_PROJECT_ID permiten vincular el proyecto sin vercel link.
+      # Para el proyecto actual: ORG_ID=arqvwblanco
+      #                              PROJECT_ID=prj_dg43o7o6lAetlBrkzRxLBDzYhZBR
+      - name: Check Vercel credentials
+        working-directory: ./publish/wwwroot
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          echo "ORG_ID length: ${#VERCEL_ORG_ID}"
+          echo "PROJECT_ID length: ${#VERCEL_PROJECT_ID}"
+          echo "TOKEN length: ${#VERCEL_TOKEN}"
+          npx --yes vercel@latest whoami
+
       - name: Deploy to Vercel
         working-directory: ./publish/wwwroot
         env:
