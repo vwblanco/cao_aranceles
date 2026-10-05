@@ -16,6 +16,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Restore dependencies
         run: dotnet restore CalculadoraArancelesCAO.slnx
 
@@ -23,6 +28,10 @@ jobs:
         run: dotnet publish src/CalculadoraArancelesCAO/CalculadoraArancelesCAO.csproj -c Release -o publish
 
       - name: Deploy to Vercel
-        run: |
-          cd publish/wwwroot
-          npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} --project-id=${{ secrets.VERCEL_PROJECT_ID }}
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./publish/wwwroot
