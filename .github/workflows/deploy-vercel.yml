@@ -30,25 +30,24 @@ jobs:
       # Se invoca la CLI de Vercel directamente en vez de usar amondnet/vercel-action:
       # esa action fija npx vercel@25.1.0 y las versiones antiguas no reconocen los
       # tokens actuales (vcp_), por lo que el deploy fallaba con "User not found".
-      # VERCEL_ORG_ID y VERCEL_PROJECT_ID permiten vincular el proyecto sin vercel link.
-      # Para el proyecto actual: ORG_ID=arqvwblanco
-      #                              PROJECT_ID=prj_dg43o7o6lAetlBrkzRxLBDzYhZBR
+      # El proyecto se vincula por nombre y scope con 'vercel link', de modo que
+      # solo hace falta VERCEL_TOKEN y no dependen IDs que se pueden copiar mal.
       - name: Check Vercel credentials
         working-directory: ./publish/wwwroot
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          echo "ORG_ID length: ${#VERCEL_ORG_ID}"
-          echo "PROJECT_ID length: ${#VERCEL_PROJECT_ID}"
           echo "TOKEN length: ${#VERCEL_TOKEN}"
           npx --yes vercel@latest whoami
+
+      - name: Link project
+        working-directory: ./publish/wwwroot
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx --yes vercel@latest link --yes --project cao_aranceles --scope arqvwblanco
 
       - name: Deploy to Vercel
         working-directory: ./publish/wwwroot
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest --prod --yes
+        run: npx --yes vercel@latest deploy --prod --yes
