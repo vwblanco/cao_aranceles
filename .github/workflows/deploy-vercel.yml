@@ -23,10 +23,6 @@ jobs:
         run: dotnet publish src/CalculadoraArancelesCAO/CalculadoraArancelesCAO.csproj -c Release -o publish
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-        working-directory: ./publish/wwwroot
+        run: |
+          cd publish/wwwroot
+          npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} --project-id=${{ secrets.VERCEL_PROJECT_ID }}
