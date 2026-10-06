@@ -14,7 +14,10 @@ self.addEventListener('message', event => {
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm$/, /\.html$/, /\.js$/, /\.mjs$/, /\.json$/, /\.webmanifest$/, /\.css$/, /\.woff2?$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.svg$/, /\.blat$/, /\.dat$/ ];
-const offlineAssetsExclude = [ /^service-worker\.js$/ ];
+// vercel.json viaja en el manifiesto de assets pero Vercel no lo sirve como
+// archivo estatico: el reescrit SPA devuelve index.html y la integridad no
+// coincide, lo que hace fallar cache.addAll() e impide instalar el SW.
+const offlineAssetsExclude = [ /^service-worker\.js$/, /^vercel\.json$/ ];
 
 const base = '/';
 const baseUrl = new URL(base, self.origin);
