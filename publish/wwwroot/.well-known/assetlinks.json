@@ -1,0 +1,12 @@
+﻿{
+    "relation":  [
+                     "delegate_permission/common.handle_all_urls"
+                 ],
+    "target":  {
+                   "namespace":  "android_app",
+                   "package_name":  "bo.edu.cao.aranceles",
+                   "sha256_cert_fingerprints":  [
+                                                    "CC70D422708AF8A956A3B2BB9CA7B8B5FFA69CDB441FA7D5D3197ADF75E9590F"
+                                                ]
+               }
+}
