@@ -1,12 +1,11 @@
-﻿@page "/tramites"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@page "/tramites"
 @inject TramiteRepository Tramites
 @inject ParametrosService Parametros
 
-<PageTitle>TrÃ¡mites y tarifas | CAO</PageTitle>
+<PageTitle>Trámites y tarifas | CAO</PageTitle>
 
-<h1 class="h4 mb-1">TrÃ¡mites, planos demostrativos y declaraciones juradas</h1>
-<p class="text-secondary small mb-3">Buscador rÃ¡pido de tarifas vigentes.</p>
+<h1 class="h4 mb-1">Trámites, planos demostrativos y declaraciones juradas</h1>
+<p class="text-secondary small mb-3">Buscador rápido de tarifas vigentes.</p>
 
 @if (!Tramites.TodosConfirmados)
 {
@@ -19,15 +18,15 @@
     <div class="card-body">
         <div class="row g-2 mb-3">
             <div class="col-12 col-md-8">
-                <label class="visually-hidden" for="buscar">Buscar trÃ¡mite</label>
-                <input id="buscar" type="search" class="form-control" placeholder="Buscar por nombre o cÃ³digoâ€¦"
+                <label class="visually-hidden" for="buscar">Buscar trámite</label>
+                <input id="buscar" type="search" class="form-control" placeholder="Buscar por nombre o código…"
                        value="@_texto" @oninput="e => { _texto = e.Value?.ToString() ?? string.Empty; Buscar(); }" />
             </div>
             <div class="col-12 col-md-4">
-                <label class="visually-hidden" for="categoria">CategorÃ­a</label>
+                <label class="visually-hidden" for="categoria">Categoría</label>
                 <select id="categoria" class="form-select" value="@_categoria"
                         @onchange="CambiarCategoria">
-                    <option value="">Todas las categorÃ­as</option>
+                    <option value="">Todas las categorías</option>
                     @foreach (var categoria in CategoriaTramiteCatalogo.Todas)
                     {
                         <option value="@categoria.Id">@categoria.Nombre</option>
@@ -38,7 +37,7 @@
 
         @if (_resultados.Count == 0)
         {
-            <p class="text-secondary small mb-0">No se encontraron trÃ¡mites con ese criterio.</p>
+            <p class="text-secondary small mb-0">No se encontraron trámites con ese criterio.</p>
         }
         else
         {
@@ -46,8 +45,8 @@
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 5rem">CÃ³digo</th>
-                            <th>TrÃ¡mite</th>
+                            <th style="width: 5rem">Código</th>
+                            <th>Trámite</th>
                             <th class="d-none d-md-table-cell">Base</th>
                             <th class="text-end">Tarifa (Bs)</th>
                             <th class="d-none d-lg-table-cell">Vigencia</th>

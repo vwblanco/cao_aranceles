@@ -23,7 +23,6 @@ public sealed class MatrixRepository
         new ItemNavegacion("4B", "Inspecciones y auditorías", "area4b", "area"),
         new ItemNavegacion("6", "Plantas tipo", "area6", "area"),
         new ItemNavegacion("ST", "Staff", "staff-admin", "admin"),
-        new ItemNavegacion("AF", "Afiliados", "afiliados-admin", "admin"),
         new ItemNavegacion("RG", "Reglamento 2026", "reglamento", "reglamento"),
         new ItemNavegacion("TR", "Trámites", "tramites", "tramites"),
         new ItemNavegacion("AN", "Anexos", "matrices", "anexos")

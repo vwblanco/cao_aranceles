@@ -1,12 +1,11 @@
-﻿@page "/reglamento"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@page "/reglamento"
 @inject IJSRuntime Js
 
 <PageTitle>Reglamento de Aranceles 2026 | CAO</PageTitle>
 
 <h1 class="h4 mb-1">Reglamento de Aranceles 2026</h1>
 <p class="text-secondary small mb-3">
-    Documento base para el cÃ¡lculo de honorarios profesionales del Colegio de Arquitectos de Oruro.
+    Documento base para el cálculo de honorarios profesionales del Colegio de Arquitectos de Oruro.
 </p>
 
 <div class="card shadow-sm border-0">
@@ -52,22 +51,22 @@
 
 <div class="card shadow-sm border-0 mt-3">
     <div class="card-body">
-        <h2 class="h6 mb-2">Resumen de Ã¡reas principales</h2>
+        <h2 class="h6 mb-2">Resumen de áreas principales</h2>
         <div class="table-responsive">
             <table class="table table-sm small align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 5rem">Ãrea</th>
-                        <th>DescripciÃ³n</th>
-                        <th class="text-end">Base cÃ¡lculo</th>
+                        <th style="width: 5rem">Área</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Base cálculo</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td class="fw-semibold">1</td><td>Servicios de arquitectura</td><td class="text-end">CH Ã— MÂ² Ã— h(k,r) Ã— Fa Ã— Fj</td></tr>
-                    <tr><td class="fw-semibold">2A</td><td>Lotes y fraccionamiento</td><td class="text-end">max(Precio Ã— MÂ², Hbase) + 5,5 % PI</td></tr>
-                    <tr><td class="fw-semibold">3</td><td>RemodelaciÃ³n, restauraciÃ³n, patrimonio</td><td class="text-end">FÃ³rmula Ãrea 1 Ã— Fj (1,10â€“1,25)</td></tr>
-                    <tr><td class="fw-semibold">4A</td><td>AvalÃºos, peritajes, dirimiciÃ³n</td><td class="text-end">Valor Ã— 3/1000 o 6/1000</td></tr>
-                    <tr><td class="fw-semibold">4B</td><td>Inspecciones y auditorÃ­as</td><td class="text-end">Hbase Ã— multiplicador (0,50â€“1,50)</td></tr>
+                    <tr><td class="fw-semibold">1</td><td>Servicios de arquitectura</td><td class="text-end">CH × M² × h(k,r) × Fa × Fj</td></tr>
+                    <tr><td class="fw-semibold">2A</td><td>Lotes y fraccionamiento</td><td class="text-end">max(Precio × M², Hbase) + 5,5 % PI</td></tr>
+                    <tr><td class="fw-semibold">3</td><td>Remodelación, restauración, patrimonio</td><td class="text-end">Fórmula Área 1 × Fj (1,10–1,25)</td></tr>
+                    <tr><td class="fw-semibold">4A</td><td>Avalúos, peritajes, dirimición</td><td class="text-end">Valor × 3/1000 o 6/1000</td></tr>
+                    <tr><td class="fw-semibold">4B</td><td>Inspecciones y auditorías</td><td class="text-end">Hbase × multiplicador (0,50–1,50)</td></tr>
                     <tr><td class="fw-semibold">6</td><td>Plantas tipo y proyectos repetidos</td><td class="text-end">Escala decreciente sobre unidad base</td></tr>
                 </tbody>
             </table>

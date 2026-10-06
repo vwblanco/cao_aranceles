@@ -1,16 +1,15 @@
-﻿@page "/area4b"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@page "/area4b"
 @inherits CalculadoraArancelesCAO.UI.Components.CalculadoraBase
 
-<PageTitle>Ãrea 4B Â· Inspecciones y auditorÃ­as | CAO</PageTitle>
+<PageTitle>Área 4B · Inspecciones y auditorías | CAO</PageTitle>
 
-<h1 class="h4 mb-1">Ãrea 4B &middot; Inspecciones y auditorÃ­as</h1>
+<h1 class="h4 mb-1">Área 4B &middot; Inspecciones y auditorías</h1>
 <p class="text-secondary small mb-3">Honorario = Hbase &times; multiplicador (0,50 &middot; 0,75 &middot; 1,50)</p>
 
 <div class="card shadow-sm border-0">
     <div class="card-body">
         <div class="mb-3">
-            <span class="form-label small fw-semibold d-block mb-2">Tipo de inspecciÃ³n</span>
+            <span class="form-label small fw-semibold d-block mb-2">Tipo de inspección</span>
             @foreach (var tipo in Matrices.TiposInspeccion)
             {
                 <button type="button"

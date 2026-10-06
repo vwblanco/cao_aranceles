@@ -2,7 +2,7 @@
 @inject AutenticacionService Auth
 @inject NavigationManager Navigation
 
-<PageTitle>Ingresar | CAO</PageTitle>
+<PageTitle>Acceso staff | CAO</PageTitle>
 
 <div class="min-vh-100 d-flex align-items-center justify-content-center login-fondo">
     <div class="card shadow-lg border-0 w-100" style="max-width: 420px;">
@@ -15,11 +15,6 @@
         </div>
 
         <div class="card-body p-4">
-            <h4 class="text-center mb-3">Acceso Restringido</h4>
-            <p class="text-muted small text-center mb-4">
-                Ingrese sus credenciales de colegiado para acceder a la calculadora de aranceles
-            </p>
-
             @if (ErrorMessage is not null)
             {
                 <div class="alert alert-danger py-2 px-3 small mb-3" role="alert">
@@ -27,59 +22,10 @@
                 </div>
             }
 
-            @if (ListaVacia && Paso == PasoCredenciales)
-            {
-                <div class="alert alert-warning py-2 px-3 small">
-                    Todavia no hay una lista de afiliados cargada. El administrador debe
-                    cargar el archivo Excel desde la pagina de administracion.
-                </div>
-            }
-            else if (IndiceDisponible && Paso == PasoCredenciales)
-            {
-                <div class="alert alert-secondary py-2 px-3 small">
-                    Este dispositivo no tiene la lista completa, pero puede validar su
-                    acceso igual: el Colegio publico un indice con @TotalIndice afiliados.
-                </div>
-            }
-
-            @if (Paso == PasoConfirmar)
-            {
-                <div class="text-center py-2">
-                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-success text-white"
-                         style="width: 3.5rem; height: 3.5rem; font-size: 1.75rem;" aria-hidden="true">&#10003;</div>
-                    <h5 class="mb-1">Acceso concedido</h5>
-                    <p class="small text-muted mb-3">Confirme que estos datos son los suyos antes de continuar.</p>
-
-                    <div class="card bg-light border-0 text-start mb-3">
-                        <div class="card-body py-3">
-                            <div class="mb-2">
-                                <small class="text-muted d-block">Identidad en el Colegio</small>
-                                <strong>@NombreConfirmado</strong>
-                            </div>
-                            <div>
-                                <small class="text-muted d-block">N&ordm; Registro</small>
-                                <strong>@RegistroConfirmado</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    @if (!string.IsNullOrWhiteSpace(CiConfirmada))
-                    {
-                        <p class="small text-muted">CI registrada: <strong>@CiConfirmada</strong></p>
-                    }
-
-                    <button type="button" class="btn btn-success w-100 py-2 mb-2" @onclick="ContinuarDesdeConfirmacion">
-                        Si, son mis datos
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary w-100 py-2" @onclick="RechazarIdentidadAsync">
-                        No soy yo
-                    </button>
-                </div>
-            }
-            else if (Paso == PasoCrearPin)
+            @if (Paso == PasoCrearPin)
             {
                 <div>
-                    <h5 class="text-center mb-2">Proteja este dispositivo</h5>
+                    <h4 class="text-center mb-2">Proteja este dispositivo</h4>
                     <p class="small text-muted text-center mb-3">
                         Cree un PIN de 4 digitos. Si presta el celular con la sesion abierta,
                         la aplicacion lo pedira al volver a abrirse.
@@ -111,9 +57,9 @@
             else if (Paso == PasoVerificarPin)
             {
                 <div>
-                    <h5 class="text-center mb-2">Sesion bloqueada</h5>
+                    <h4 class="text-center mb-2">Sesion bloqueada</h4>
                     <p class="small text-muted text-center mb-3">
-                        Ingrese su PIN de 4 digitos para desbloquear la calculadora.
+                        Ingrese su PIN de 4 digitos para continuar.
                     </p>
 
                     <div class="mb-3">
@@ -136,46 +82,14 @@
                     </button>
                 </div>
             }
-            else if (PedirCi)
-            {
-                <div class="alert alert-info py-2 px-3 small mb-3">
-                    <strong>Bienvenido, @NombreCompletoGuardado</strong><br />
-                    Su numero de registro <strong>@RegistroGuardado</strong> no tiene CI asociado.
-                    Ingrese su Carnet de Identidad para proteger su acceso en futuros ingresos.
-                </div>
-
-                <form @onsubmit="HandleCompletarCiAsync" @onsubmit:preventDefault>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold" for="ciNueva">Carnet de Identidad</label>
-                        <input type="text" class="form-control form-control-sm text-uppercase" id="ciNueva"
-                               value="@CiNueva" @oninput="e => CiNueva = e.Value?.ToString()?.ToUpperInvariant() ?? string.Empty"
-                               placeholder="1234567" autocomplete="off" maxlength="12" required />
-                        <div class="form-text">Ej: 1234567 LP / CB / SC / OR / PT / CH / BE (o solo numeros)</div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 py-2" disabled="@CargandoCi">
-                        @if (CargandoCi)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            <span>Guardando...</span>
-                        }
-                        else
-                        {
-                            <span>Guardar y continuar</span>
-                        }
-                    </button>
-                </form>
-            }
             else
             {
-                <form @onsubmit="HandleLoginAsync" @onsubmit:preventDefault autocomplete="off">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold" for="nombre">Nombre completo</label>
-                        <input type="text" class="form-control form-control-sm" id="nombre"
-                               value="@Nombre" @oninput="e => Nombre = e.Value?.ToString() ?? string.Empty"
-                               autocomplete="off" />
-                    </div>
+                <h4 class="text-center mb-2">Acceso del Colegio</h4>
+                <p class="text-muted small text-center mb-4">
+                    Reserved para el Administrador y el personal autorizado
+                </p>
 
+                <form @onsubmit="HandleLoginAsync" @onsubmit:preventDefault autocomplete="off">
                     <div class="mb-3">
                         <label class="form-label small fw-semibold" for="numeroRegistro">N&ordm; Registro CAO</label>
                         <input type="text" class="form-control form-control-sm" id="numeroRegistro"
@@ -184,15 +98,10 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold" for="ci">
-                            Carnet de identidad <span class="fw-normal text-muted">(si figura registrado)</span>
-                        </label>
-                        <input type="text" class="form-control form-control-sm" id="ci"
-                               value="@CI" @oninput="e => CI = e.Value?.ToString() ?? string.Empty"
-                               autocomplete="new-password" maxlength="20" />
-                        <div class="form-text">
-                            (respeta mayúsculas/minúsculas)
-                        </div>
+                        <label class="form-label small fw-semibold" for="clave">Clave</label>
+                        <input type="password" class="form-control form-control-sm" id="clave"
+                               value="@Clave" @oninput="e => Clave = e.Value?.ToString() ?? string.Empty"
+                               autocomplete="current-password" />
                     </div>
 
                     <div class="form-check mb-3">
@@ -212,6 +121,8 @@
                         }
                     </button>
                 </form>
+
+                <a class="btn btn-link w-100 btn-sm mt-2" href="">Volver a la calculadora</a>
             }
 
             <div class="text-center mt-3">
@@ -225,58 +136,25 @@
 </div>
 
 @code {
-    /// <summary>
-    /// Etapas del ingreso. Se valida en cadena: credenciales, confirmacion de
-    /// identidad y PIN. La sesion queda activa entre pasos, asi que "No soy yo"
-    /// debe cerrarla explicitamente.
-    /// </summary>
     private const string PasoCredenciales = "Credenciales";
-    private const string PasoConfirmar = "Confirmar";
     private const string PasoCrearPin = "CrearPin";
     private const string PasoVerificarPin = "VerificarPin";
 
     private string Paso { get; set; } = PasoCredenciales;
 
-    private string Nombre { get; set; } = string.Empty;
     private string NumeroRegistro { get; set; } = string.Empty;
-    private string CI { get; set; } = string.Empty;
-    private bool Recordar { get; set; }
+    private string Clave { get; set; } = string.Empty;
+    private bool Recordar { get; set; } = true;
     private bool Cargando { get; set; }
     private string? ErrorMessage { get; set; }
-    private bool ListaVacia { get; set; }
-
-    // El indice embebido cubre los casos donde el dispositivo no tiene la lista.
-    private bool IndiceDisponible { get; set; }
-    private int TotalIndice { get; set; }
-
-    // Estado para enrollamiento de CI
-    private bool PedirCi { get; set; }
-    private string NombreCompletoGuardado { get; set; } = string.Empty;
-    private string RegistroGuardado { get; set; } = string.Empty;
-    private string CiNueva { get; set; } = string.Empty;
-    private bool CargandoCi { get; set; }
-
-    // Estado para confirmacion de identidad y PIN
-    private string NombreConfirmado { get; set; } = string.Empty;
-    private string RegistroConfirmado { get; set; } = string.Empty;
-    private string CiConfirmada { get; set; } = string.Empty;
     private string Pin { get; set; } = string.Empty;
-
-    /// <summary>True si el dispositivo ya tiene un PIN, para verificar en vez de crear.</summary>
-    private bool RequierePinExistente { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Recordar = true;
-        ListaVacia = (await Auth.ObtenerAfiliadosAsync()).Count == 0;
-        TotalIndice = await Auth.ObtenerTotalIndiceAsync();
-        IndiceDisponible = ListaVacia && TotalIndice > 0;
-
         // Si la sesion sigue abierta pero vencio el reloj de inactividad, alcanza con
-        // el PIN: no se vuelven a pedir registro ni CI.
+        // el PIN: no se vuelven a pedir registro ni clave.
         if (await Auth.DeboBloquearAsync())
         {
-            RequierePinExistente = true;
             Paso = PasoVerificarPin;
         }
     }
@@ -288,25 +166,21 @@
 
         try
         {
-            var resultado = await Auth.LoginAsync(Nombre, NumeroRegistro, CI, Recordar);
+            var resultado = await Auth.LoginAsync(NumeroRegistro, Clave, Recordar);
 
             if (!resultado.Exitoso)
             {
                 ErrorMessage = resultado.Mensaje;
+                Clave = string.Empty;
                 return;
             }
 
-            if (resultado.RequiereCi)
-            {
-                // Login OK pero falta CI → cambiar a formulario de CI
-                PedirCi = true;
-                NombreCompletoGuardado = Nombre;
-                RegistroGuardado = NumeroRegistro;
-                CiNueva = string.Empty;
-                return;
-            }
+            Pin = string.Empty;
+            Clave = string.Empty;
 
-            await AvanzarDesdeLoginAsync(resultado);
+            // RequierePin indica que este dispositivo ya tiene un PIN configurado:
+            // hay que verificarlo. Si no, se ofrece crear uno.
+            Paso = resultado.RequierePin ? PasoVerificarPin : PasoCrearPin;
         }
         catch (Exception ex)
         {
@@ -316,37 +190,6 @@
         {
             Cargando = false;
         }
-    }
-
-    /// <summary>
-    /// Tras un ingreso exitoso se muestra primero la identidad y recien despues el
-    /// PIN, para que el afiliado detecte un acceso que no sea suyo.
-    /// </summary>
-    private async Task AvanzarDesdeLoginAsync(ResultadoLogin resultado)
-    {
-        NombreConfirmado = resultado.NombreConfirmacion ?? Nombre;
-        RegistroConfirmado = resultado.RegistroConfirmacion ?? NumeroRegistro;
-        CiConfirmada = CI.Trim();
-        RequierePinExistente = resultado.RequierePin;
-        Pin = string.Empty;
-        ErrorMessage = null;
-        Paso = PasoConfirmar;
-        await Task.CompletedTask;
-    }
-
-    private void ContinuarDesdeConfirmacion()
-    {
-        // RequierePin indica que este dispositivo ya tiene un PIN configurado.
-        Paso = RequierePinExistente ? PasoVerificarPin : PasoCrearPin;
-    }
-
-    private async Task RechazarIdentidadAsync()
-    {
-        await Auth.LogoutAsync();
-        Paso = PasoCredenciales;
-        Pin = string.Empty;
-        CiConfirmada = string.Empty;
-        ErrorMessage = "Se cerro la sesion. Si cree que es un error, ingrese nuevamente.";
     }
 
     private async Task EstablecerPinAsync()
@@ -363,7 +206,7 @@
                 return;
             }
 
-            Navigation.NavigateTo("/", true);
+            IrAlInicio();
         }
         catch (Exception ex)
         {
@@ -385,7 +228,7 @@
             var (exitoso, mensaje) = await Auth.VerificarPinAsync(Pin);
             if (exitoso)
             {
-                Navigation.NavigateTo("/", true);
+                IrAlInicio();
                 return;
             }
 
@@ -410,38 +253,8 @@
     private void OmitirPin()
     {
         Pin = string.Empty;
-        Navigation.NavigateTo("/", true);
+        IrAlInicio();
     }
 
-    private async Task HandleCompletarCiAsync()
-    {
-        ErrorMessage = null;
-        CargandoCi = true;
-
-        try
-        {
-            var ok = await Auth.CompletarCedulaAsync(CiNueva);
-
-            if (ok)
-            {
-                CiConfirmada = CiNueva;
-                PedirCi = false;
-                await AvanzarDesdeLoginAsync(new ResultadoLogin(
-                    true, "Acceso concedido.", false, "Colegiado",
-                    NombreCompletoGuardado, RegistroGuardado));
-            }
-            else
-            {
-                ErrorMessage = "No se pudo guardar la CI. Verifique que coincida con la lista o intente nuevamente.";
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Error inesperado: {ex.Message}";
-        }
-        finally
-        {
-            CargandoCi = false;
-        }
-    }
+    private void IrAlInicio() => Navigation.NavigateTo("/", true);
 }

@@ -1,24 +1,23 @@
-﻿@page "/area2a"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@page "/area2a"
 @inherits CalculadoraArancelesCAO.UI.Components.CalculadoraBase
 
-<PageTitle>Ãrea 2A Â· Lotes y fraccionamiento | CAO</PageTitle>
+<PageTitle>Área 2A · Lotes y fraccionamiento | CAO</PageTitle>
 
-<h1 class="h4 mb-1">Ãrea 2A &middot; Lotes y fraccionamiento</h1>
+<h1 class="h4 mb-1">Área 2A &middot; Lotes y fraccionamiento</h1>
 <p class="text-secondary small mb-3">
-    Hfinal = max(Precio Bs/mÂ² &times; MÂ², Hbase) &middot; Aporte al Patrimonio Inmobiliario = Hfinal &times; 5,5 %
+    Hfinal = max(Precio Bs/m² &times; M², Hbase) &middot; Aporte al Patrimonio Inmobiliario = Hfinal &times; 5,5 %
 </p>
 
 <div class="card shadow-sm border-0">
     <div class="card-body">
         <div class="row g-3">
             <div class="col-12 col-md-6">
-                <label class="form-label small fw-semibold" for="a2-precio">Precio comercial &middot; Bs/mÂ²</label>
+                <label class="form-label small fw-semibold" for="a2-precio">Precio comercial &middot; Bs/m²</label>
                 <input id="a2-precio" type="text" inputmode="decimal" class="form-control"
                        value="@_precio" @oninput="e => { _precio = e.Value?.ToString() ?? string.Empty; Recalcular(); }" />
             </div>
             <div class="col-12 col-md-6">
-                <label class="form-label small fw-semibold" for="a2-m2">Superficie del lote &middot; mÂ²</label>
+                <label class="form-label small fw-semibold" for="a2-m2">Superficie del lote &middot; m²</label>
                 <input id="a2-m2" type="text" inputmode="decimal" class="form-control"
                        value="@_superficie" @oninput="e => { _superficie = e.Value?.ToString() ?? string.Empty; Recalcular(); }" />
             </div>

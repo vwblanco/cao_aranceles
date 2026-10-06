@@ -14,7 +14,7 @@ self.addEventListener('message', event => {
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm$/, /\.html$/, /\.js$/, /\.mjs$/, /\.json$/, /\.webmanifest$/, /\.css$/, /\.woff2?$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.svg$/, /\.blat$/, /\.dat$/ ];
-const offlineAssetsExclude = [ /^service-worker\.js$/, /^\/?data\// ];
+const offlineAssetsExclude = [ /^service-worker\.js$/ ];
 
 const base = '/';
 const baseUrl = new URL(base, self.origin);
@@ -43,27 +43,11 @@ async function onFetch(event) {
         return;
     }
 
-    const cache = await caches.open(cacheName);
-    const url = new URL(event.request.url);
+const cache = await caches.open(cacheName);
+  const url = new URL(event.request.url);
 
-    // El indice de acceso cambia cada vez que el Colegio incorpora o da de baja a
-    // un afiliado, asi que se pide primero a la red. El service worker no lo guarda
-    // en su cache: la copia sin conexion la conserva la aplicacion en localStorage.
-    const esIndiceDeAcceso = url.origin === self.origin && /^\/?data\//.test(url.pathname);
-    if (esIndiceDeAcceso) {
-        try {
-            return await fetch(event.request);
-        } catch (error) {
-            const cacheado = await cache.match(event.request);
-            if (cacheado) {
-                return cacheado;
-            }
-            throw error;
-        }
-    }
-
-    const shouldServeIndexHtml = event.request.mode === 'navigate'
-        && !manifestUrlList.some(url => url === event.request.url);
+  const shouldServeIndexHtml = event.request.mode === 'navigate'
+          && !manifestUrlList.some(url => url === event.request.url);
 
     const request = shouldServeIndexHtml ? 'index.html' : event.request;
     const cachedResponse = await cache.match(request);

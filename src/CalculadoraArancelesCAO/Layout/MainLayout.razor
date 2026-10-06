@@ -36,8 +36,9 @@
                             </div>
                         </Authorized>
                         <NotAuthorized>
+                            @* El calculo es de acceso libre; este acceso es solo del Colegio. *@
                             <button type="button" class="btn btn-sm btn-outline-light" @onclick="IrAlLogin">
-                                Ingresar
+                                Acceso staff
                             </button>
                         </NotAuthorized>
                     </AuthorizeView>
@@ -68,25 +69,22 @@
     <nav class="area-nav sticky-top">
         <div class="container">
             <div class="nav-scroll">
-                <AuthorizeView>
+                @* El calculo es publico: estas secciones se muestran siempre. *@
+                @foreach (var item in Matrices.ItemsNavegacion.Where(i => i.Tipo != "admin"))
+                {
+                    <a class="area-chip @(_rutaActual.StartsWith(item.Ruta) ? "activo" : string.Empty)"
+                       href="@item.Ruta">
+                        <span class="area-codigo">@item.Codigo</span>
+                        <span class="area-nombre">@item.Nombre</span>
+                    </a>
+                }
+                @* La gestion del Colegio es la unica parte restringida. *@
+                <AuthorizeView Roles="Admin,Staff">
                     <Authorized>
-                        @foreach (var item in Matrices.ItemsNavegacion)
+                        @foreach (var item in Matrices.ItemsNavegacion.Where(i => i.Tipo == "admin"))
                         {
-                            var activo = item.Tipo == "area" ? _rutaActual == item.Ruta :
-                                         item.Tipo == "reglamento" ? _rutaActual == item.Ruta :
-                                         item.Tipo == "tramites" ? _rutaActual.StartsWith(item.Ruta) :
-                                         _rutaActual.StartsWith(item.Ruta);
-
-                            // Filtrar items de admin/staff
-                            var mostrar = item.Tipo switch
-                            {
-                                "admin" => context.User.IsInRole("Admin") || context.User.IsInRole("Staff"),
-                                _ => true
-                            };
-
-                            if (!mostrar) continue;
-
-                            <a class="area-chip @(activo ? "activo" : string.Empty)" href="@item.Ruta">
+                            <a class="area-chip @(_rutaActual.StartsWith(item.Ruta) ? "activo" : string.Empty)"
+                               href="@item.Ruta">
                                 <span class="area-codigo">@item.Codigo</span>
                                 <span class="area-nombre">@item.Nombre</span>
                             </a>

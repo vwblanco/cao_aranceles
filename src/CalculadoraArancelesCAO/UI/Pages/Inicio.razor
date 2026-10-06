@@ -1,5 +1,4 @@
-﻿@page "/"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@page "/"
 @inject ArancelEngine Motor
 @inject MatrixRepository Matrices
 @inject ParametrosService Parametros
@@ -32,9 +31,9 @@
 
 <div class="card shadow-sm border-0 mt-4">
     <div class="card-body">
-        <h2 class="h6">Ejemplo de verificaciÃ³n del algoritmo</h2>
+        <h2 class="h6">Ejemplo de verificación del algoritmo</h2>
         <p class="small text-secondary mb-2">
-            Vivienda Unifamiliar de @FormatoBoliviano.Decimal(180, 0) mÂ² con proyecto completo (Fa = 1,00).
+            Vivienda Unifamiliar de @FormatoBoliviano.Decimal(180, 0) m² con proyecto completo (Fa = 1,00).
         </p>
         <div class="table-responsive">
             <table class="table table-sm small mb-0 align-middle">
@@ -45,7 +44,7 @@
                     </tr>
                     <tr>
                         <th>Factor h<sub>(k,r)</sub></th>
-                        <td>1,29 (rango 101 &ndash; 250 mÂ²)</td>
+                        <td>1,29 (rango 101 &ndash; 250 m²)</td>
                     </tr>
                     <tr>
                         <th>Honorario calculado (Hcalc)</th>
@@ -55,7 +54,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>LÃ­mite mÃ­nimo (Hmin)</th>
+                        <th>Límite mínimo (Hmin)</th>
                         <td>@FormatoBoliviano.Moneda(Parametros.Actual.HonorarioBaseSemanal) &times; 1,00</td>
                     </tr>
                     <tr class="table-light">

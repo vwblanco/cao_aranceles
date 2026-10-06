@@ -1,7 +1,7 @@
 @page "/staff-admin"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 @using CalculadoraArancelesCAO.UI.Services
-@inject AfiliadosService Afiliados
+@inject StaffService Personal
 @inject IJSRuntime JS
 
 <PageTitle>Administrar Staff | CAO</PageTitle>
@@ -12,7 +12,7 @@
 
 <p class="text-muted small mb-4">
     Cree credenciales para el personal autorizado (1-2 personas) que podrá
-    cargar listas de afiliados y modificar parámetros económicos.
+    modificar parámetros económicos.
     Cada credencial tiene su propia contraseña que usted entrega personalmente.
 </p>
 
@@ -133,7 +133,7 @@ else
 
     private async Task CargarStaffAsync()
     {
-        StaffList = await Afiliados.ObtenerStaffAsync();
+        StaffList = await Personal.ObtenerStaffAsync();
     }
 
     private async Task CrearStaffAsync()
@@ -144,7 +144,7 @@ else
 
         try
         {
-            var ok = await Afiliados.AgregarStaffAsync(NuevoRegistro, NuevoNombre, NuevaClave);
+            var ok = await Personal.AgregarStaffAsync(NuevoRegistro, NuevoNombre, NuevaClave);
 
             if (ok)
             {
@@ -180,7 +180,7 @@ else
 
         if (confirmado)
         {
-            var ok = await Afiliados.EliminarStaffAsync(staff.NumeroRegistro);
+            var ok = await Personal.EliminarStaffAsync(staff.NumeroRegistro);
             if (ok)
             {
                 await CargarStaffAsync();

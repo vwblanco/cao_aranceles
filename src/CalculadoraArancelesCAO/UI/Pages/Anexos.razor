@@ -1,11 +1,10 @@
-﻿@page "/matrices"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@page "/matrices"
 @inject MatrixRepository Matrices
 
 <PageTitle>Anexos A y B | CAO</PageTitle>
 
 <h1 class="h4 mb-1">Anexos del Reglamento 2026</h1>
-<p class="text-secondary small mb-3">Matriz h<sub>(k,r)</sub> por tipologÃ­a y factor de alcance Fa por perfil.</p>
+<p class="text-secondary small mb-3">Matriz h<sub>(k,r)</sub> por tipología y factor de alcance Fa por perfil.</p>
 
 <div class="card shadow-sm border-0 mb-3">
     <div class="card-body">
@@ -14,7 +13,7 @@
             <table class="table table-sm small align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>TipologÃ­a</th>
+                        <th>Tipología</th>
                         @foreach (var rango in Matrices.Rangos)
                         {
                             <th class="text-end">@rango.Etiqueta</th>
@@ -84,15 +83,15 @@
 
 <div class="card shadow-sm border-0 mb-3">
     <div class="card-body">
-        <h2 class="h6">Ãrea 3 &middot; Factores de complejidad Fj</h2>
+        <h2 class="h6">Área 3 &middot; Factores de complejidad Fj</h2>
         <div class="table-responsive">
             <table class="table table-sm small align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>CÃ³digo</th>
-                        <th>IntervenciÃ³n</th>
+                        <th>Código</th>
+                        <th>Intervención</th>
                         <th class="text-end">Fj</th>
-                        <th>DescripciÃ³n</th>
+                        <th>Descripción</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -113,14 +112,14 @@
 
 <div class="card shadow-sm border-0">
     <div class="card-body">
-        <h2 class="h6">Ãrea 6 &middot; Escala decreciente</h2>
+        <h2 class="h6">Área 6 &middot; Escala decreciente</h2>
         <div class="table-responsive">
             <table class="table table-sm small align-middle mb-0">
                 <thead class="table-light">
                     <tr>
                         <th>Tramo</th>
                         <th class="text-end">Porcentaje</th>
-                        <th>DescripciÃ³n</th>
+                        <th>Descripción</th>
                     </tr>
                 </thead>
                 <tbody>

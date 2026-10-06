@@ -5,51 +5,29 @@ namespace CalculadoraArancelesCAO.Tests;
 
 public sealed class AdminLoginTests
 {
+    private static bool EsAdmin(string numeroRegistro, string clave)
+    {
+        var metodo = typeof(AutenticacionService).GetMethod(
+            "EsAdmin",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("No se encontro AutenticacionService.EsAdmin.");
+
+        return (bool)metodo.Invoke(null, new object[] { numeroRegistro, clave})!;
+    }
+
     [Fact]
     public void EsAdmin_CredencialesCorrectas_RetornaTrue()
-    {
-        // Arrange
-        var tipo = typeof(AutenticacionService);
-        var metodo = tipo.GetMethod("EsAdmin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-
-        // Act
-        var resultado = (bool)metodo.Invoke(null, new object[] { "VICTOR WILFREDO BLANCO COCA", "3107", "#Teresita24#" });
-
-        // Assert
-        Assert.True(resultado);
-    }
+        => Assert.True(EsAdmin("3107", "#Teresita24#"));
 
     [Fact]
-    public void EsAdmin_CredencialesConMayusculasDistintas_RetornaTrue()
-    {
-        var tipo = typeof(AutenticacionService);
-        var metodo = tipo.GetMethod("EsAdmin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-
-        // Case-insensitive para clave
-        var resultado = (bool)metodo.Invoke(null, new object[] { "victor wilfredo blanco coca", "3107", "#TERESITA24#" });
-
-        Assert.True(resultado);
-    }
+    public void EsAdmin_ClaveConMinusculas_RetornaTrue()
+        => Assert.True(EsAdmin("3107", "#teresita24#"));
 
     [Fact]
     public void EsAdmin_ClaveIncorrecta_RetornaFalse()
-    {
-        var tipo = typeof(AutenticacionService);
-        var metodo = tipo.GetMethod("EsAdmin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-
-        var resultado = (bool)metodo.Invoke(null, new object[] { "VICTOR WILFREDO BLANCO COCA", "3107", "claveincorrecta" });
-
-        Assert.False(resultado);
-    }
+        => Assert.False(EsAdmin("3107", "claveincorrecta"));
 
     [Fact]
     public void EsAdmin_RegistroIncorrecto_RetornaFalse()
-    {
-        var tipo = typeof(AutenticacionService);
-        var metodo = tipo.GetMethod("EsAdmin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-
-        var resultado = (bool)metodo.Invoke(null, new object[] { "VICTOR WILFREDO BLANCO COCA", "9999", "#Teresita24#" });
-
-        Assert.False(resultado);
-    }
+        => Assert.False(EsAdmin("9999", "#Teresita24#"));
 }
